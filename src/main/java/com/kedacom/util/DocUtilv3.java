@@ -70,16 +70,16 @@ public class DocUtilv3 {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+        return targetPath;
     }
 
     private static void paragraphHandler(XWPFParagraph paragraph, Map<String, Object> param) {
         //获取所有runs去掉空格拼接成整段文本(一个段落)
         List<XWPFRun> runs = paragraph.getRuns();
-        Map<Integer, String> idForRuns = new HashMap<>(256);
+        List<String> idForRuns = new ArrayList<>(256);
         //文本缓存,与id对应
         for (int i = 0; i < runs.size(); i++) {
-            idForRuns.put(i, runs.get(i).toString());
+            idForRuns.add(runs.get(i).toString());
         }
         //跨行文本预处理
         multilineCodeHandler(paragraph, runs, idForRuns);
@@ -90,33 +90,38 @@ public class DocUtilv3 {
         //todo 图片编码处理
     }
 
-    private static void textCodeHandler(Map<String, Object> param, List<XWPFRun> runs, Map<Integer, String> idForRuns) {
+    private static void textCodeHandler(Map<String, Object> param, List<XWPFRun> runs, List<String> idForRuns) {
         for (int i = 0; i < runs.size(); i++) {
             //获取本段run的文本
             String text = idForRuns.get(i);
             String newText = text;
             String reg = "\\$\\{\\w+}";
             Pattern compile = Pattern.compile(reg);
-            for (Map.Entry<String, Object> entry : param.entrySet()) {
-                //匹配文本key
-                Matcher matcher = compile.matcher(entry.getKey());
-                while (matcher.find()) {
+            Matcher matcher = compile.matcher(text);
+            //匹配文本key
+            while (matcher.find()) {
+                for (Map.Entry<String, Object> entry : param.entrySet()) {
                     newText = newText.replace(entry.getKey(), entry.getValue().toString());
                 }
             }
-            XWPFRun xwpfRun = runs.get(i);
-            xwpfRun.setText(newText,0);
+            //如果文本有编码被替换,则更新run
+            if (!text.equals(newText)) {
+                XWPFRun xwpfRun = runs.get(i);
+                xwpfRun.setText(newText, 0);
+                idForRuns.remove(i);
+                idForRuns.add(i, newText);
+            }
         }
     }
 
-    private static void multilineCodeHandler(XWPFParagraph paragraph, List<XWPFRun> runs, Map<Integer, String> idForRuns) {
+    private static void multilineCodeHandler(XWPFParagraph paragraph, List<XWPFRun> runs, List<String> idForRuns) {
         int startRunIndex = -1;
         int endRunIndex = -1;
         for (int i = 0; i < runs.size(); i++) {
             //获取本段run的文本
             String text = idForRuns.get(i);
             //匹配残缺的编码标识
-            String endRunMutilatedReg = "\\$\\{?\\S*$";
+            String endRunMutilatedReg = "\\$\\{?[^}]*$";
             Pattern compile = Pattern.compile(endRunMutilatedReg);
             Matcher matcher = compile.matcher(text);
             if (matcher.find()) {
@@ -126,7 +131,7 @@ public class DocUtilv3 {
             int lastRunSubIndex = -1;
             //寻找下一段匹配的编码末尾
             if (startRunIndex != -1) {
-                String endRunReg = "^\\{?\\S*}";
+                String endRunReg = "^\\S*}";
                 Pattern pattern = Pattern.compile(endRunReg);
                 Matcher matcher1 = pattern.matcher(text);
                 if (matcher1.find()) {
@@ -151,20 +156,30 @@ public class DocUtilv3 {
                     //末尾位置需要区分编码部分与正常文本
                     if (index == endRunIndex) {
                         String lastRunText = idForRuns.get(index);
-                        String substrBefore = lastRunText.substring(lastRunSubIndex);
+                        //}之后的文本
+                        String substrAfter1 = lastRunText.substring(lastRunSubIndex);
+                        endRunText.append(substrAfter1);
+                        //}
+                        String substrBefore = lastRunText.replace(substrAfter1, "");
                         startRunText.append(substrBefore);
-                        String substrAfter = lastRunText.replace(substrBefore, "");
-                        endRunText.append(substrAfter);
                     }
-                    //删除中间的run和缓存的文本
+                    //结束时删除中间的run和缓存的文本
                     if (index > startRunIndex && index < endRunIndex) {
+                        //删除后自动补位,对应下标相应-1
                         paragraph.removeRun(index);
+                        endRunIndex--;
                         idForRuns.remove(index);
+                        index--;
                     }
                 }
                 //pos代表w:t标签的下标
                 startRun.setText(startRunText.toString(), 0);
+                //替换内容
+                idForRuns.remove(startRunIndex);
+                idForRuns.add(startRunIndex, startRunText.toString());
                 endRun.setText(endRunText.toString(), 0);
+                idForRuns.remove(endRunIndex);
+                idForRuns.add(endRunIndex, endRunText.toString());
                 //重置标志位
                 startRunIndex = -1;
                 endRunIndex = -1;
@@ -232,7 +247,7 @@ public class DocUtilv3 {
         }
         String[] split = srcWordPath.split("\\.");
         String docType = split[split.length - 1];
-        if ("docx".equalsIgnoreCase(docType)) {
+        if (!"docx".equalsIgnoreCase(docType)) {
             throw new IllegalArgumentException("不是支持的docx类型");
         }
     }

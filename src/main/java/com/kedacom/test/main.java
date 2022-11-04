@@ -2,6 +2,7 @@ package com.kedacom.test;
 
 import com.kedacom.util.DocUtilv1;
 import com.kedacom.util.DocUtilv2;
+import com.kedacom.util.DocUtilv3;
 import lombok.SneakyThrows;
 
 import java.io.File;
@@ -30,8 +31,10 @@ public class main {
         map.put("JDLX","");
         //String s = replaceWordCode_v1(map, path);
         //System.out.println(s);
-        String s2 = replaceWordCode_v2(map, path);
-        System.out.println(s2);
+        //String s2 = replaceWordCode_v2(map, path);
+        //System.out.println(s2);
+        String s3 = DocUtilv3.replaceWordCode(map, path);
+        System.out.println(s3);
     }
     public static  List getCodeList_v1(List<String> codeList,String path){
         return DocUtilv1.getDocCodes(codeList,path);

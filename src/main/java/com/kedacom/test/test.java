@@ -11,10 +11,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -89,5 +87,39 @@ class test3{
             int end = matcher.end();
             System.out.println(start+"---"+group+"---"+end);
         }
+    }
+}
+class testLinkHashMap{
+    public static void main(String[] args) {
+        LinkedHashMap<Integer, String> map = new LinkedHashMap<>();
+        map.put(1,"文本1");
+        map.put(2,"文本2");
+
+        map.put(3,"文本3");
+        map.put(4,"文本4");
+        map.put(5,"文本5");
+        map.forEach((integer, s) -> System.out.println("key:"+integer+",value:"+s));
+        map.remove(3);
+        map.forEach((integer, s) -> System.out.println("key:"+integer+",value:"+s));
+    }
+}
+class testLinkArrayList{
+    public static void main(String[] args) {
+        ArrayList<String> linkedList=new ArrayList<>();
+        linkedList.add("文本1");
+        linkedList.add("文本2");
+        linkedList.add("文本3");
+        linkedList.add("文本4");
+        linkedList.add("文本5");
+        System.out.println(linkedList.get(3));
+        linkedList.forEach(System.out::println);
+        System.out.println("--------------");
+        linkedList.remove(3);
+        System.out.println(linkedList.get(3));
+        linkedList.forEach(System.out::println);
+        System.out.println("--------------");
+        linkedList.add(3,"新增文本3");
+        System.out.println(linkedList.get(3));
+        linkedList.forEach(System.out::println);
     }
 }
