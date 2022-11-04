@@ -11,6 +11,7 @@ import java.io.FileOutputStream;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author : lzp
@@ -74,20 +75,30 @@ public class DocUtilv3 {
     }
 
     private static void paragraphHandler(XWPFParagraph paragraph, Map<String, Object> param) {
-        //获取所有runs去掉空格拼接成整段文本(一个段落)
         List<XWPFRun> runs = paragraph.getRuns();
-        List<String> idForRuns = new ArrayList<>(256);
-        //文本缓存,与id对应
-        for (int i = 0; i < runs.size(); i++) {
-            idForRuns.add(runs.get(i).toString());
-        }
-        //跨行文本预处理
-        multilineCodeHandler(paragraph, runs, idForRuns);
+        //跨行编码文本预处理,获取文本缓存
+        List<String> idForRuns= runsMultilineCodeHandler(paragraph,runs);
+        //文本勾选框编码处理
+        Map<String,String> gxk= getGXKParam(idForRuns);
         //文本编码处理
         textCodeHandler(param, runs, idForRuns);
         //todo 勾选框处理
 
         //todo 图片编码处理
+    }
+
+    private static Map<String, String> getGXKParam(List<String> idForRuns) {
+        String gxkReg="";
+        Pattern compile = Pattern.compile(gxkReg);
+        idForRuns.stream().map(e->{
+            Map<String,String> stringStringMap=new HashMap<>();
+            Matcher matcher = compile.matcher(e);
+            while (matcher.find()){
+                stringStringMap.put(matcher.group(),"GXK_FLAG");
+            }
+            return stringStringMap;
+        }).flatMap(map -> map.entrySet()::stream)
+        return null;
     }
 
     private static void textCodeHandler(Map<String, Object> param, List<XWPFRun> runs, List<String> idForRuns) {
@@ -114,12 +125,15 @@ public class DocUtilv3 {
         }
     }
 
-    private static void multilineCodeHandler(XWPFParagraph paragraph, List<XWPFRun> runs, List<String> idForRuns) {
+    private static List<String> runsMultilineCodeHandler(XWPFParagraph paragraph, List<XWPFRun> runs) {
+        List<String> idForRuns = new ArrayList<>(256);
+        //文本缓存,与id对应
         int startRunIndex = -1;
         int endRunIndex = -1;
         for (int i = 0; i < runs.size(); i++) {
             //获取本段run的文本
-            String text = idForRuns.get(i);
+            String text = runs.get(i).toString();
+            idForRuns.add(text);
             //匹配残缺的编码标识
             String endRunMutilatedReg = "\\$\\{?[^}]*$";
             Pattern compile = Pattern.compile(endRunMutilatedReg);
@@ -185,6 +199,7 @@ public class DocUtilv3 {
                 endRunIndex = -1;
             }
         }
+        return idForRuns;
     }
 
     private static String strHandler(String paragraphText, Map<String, Object> param) {
