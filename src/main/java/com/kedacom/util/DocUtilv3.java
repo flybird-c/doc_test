@@ -26,16 +26,17 @@ public class DocUtilv3 {
         String targetPath = getTargetPath(srcWordPath);
         try (FileOutputStream fos = new FileOutputStream(targetPath);
              CustomXWPFDocument document = new CustomXWPFDocument(new FileInputStream(srcWordPath))) {
+            //处理item系列编码
+            Map<String, Object> itemParam = handItemCodes(param);
+            param.putAll(itemParam);
             //获取所有段落
             List<XWPFParagraph> paragraphs = document.getParagraphs();
             if (!CollectionUtils.isEmpty(paragraphs)) {
-                //处理item系列编码
-                Map<String, Object> itemParam = handItemCodes(param);
                 for (XWPFParagraph paragraph : paragraphs) {
                     paragraphHandler(paragraph, param);
                 }
             }
-            //处理表格
+            //处理表格 还有表格增行操作
             List<XWPFTable> tables = document.getTables();
             for (XWPFTable table : tables) {
                 List<XWPFTableRow> rows = table.getRows();
