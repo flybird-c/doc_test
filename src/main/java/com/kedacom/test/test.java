@@ -109,30 +109,30 @@ class testLinkHashMap {
 
 class testLinkArrayList {
     public static void main(String[] args) {
-        ArrayList<String> linkedList = new ArrayList<>();
-        linkedList.add("文本1");
-        linkedList.add("文本2");
-        linkedList.add("文本3");
-        linkedList.add("文本4");
-        linkedList.add("文本5");
-        System.out.println(linkedList.get(3));
-        linkedList.forEach(System.out::println);
-        System.out.println("--------------");
-        linkedList.remove(3);
-        System.out.println(linkedList.get(3));
-        linkedList.forEach(System.out::println);
-        System.out.println("--------------");
-        linkedList.add(3, "新增文本3");
-        System.out.println(linkedList.get(3));
-        linkedList.forEach(System.out::println);
-        System.out.println("________________");
-        linkedList.set(1, "替换文本1");
-        linkedList.forEach(System.out::println);
-        System.out.println("________________");
-        linkedList.add(1,"占位1index");
-        linkedList.forEach(System.out::println);
-        System.out.println("________________");
-        linkedList.add(6,"设置文本6");
-        linkedList.forEach(System.out::println);
+        List<String> runs=new ArrayList<>();
+        String con="FLAG_TRUEFLAG_TRUE";
+        runs.add("这是文本");
+        runs.add(con);
+        runs.add("这是二段文本"+con+"这是二段文本后续");
+        for (int i = 0; i < runs.size(); i++) {
+            String nowRuns = runs.get(i);
+            String reg="FLAG_TRUE";
+            Pattern compile = Pattern.compile(reg);
+            Matcher matcher = compile.matcher(nowRuns);
+            int count=i;
+            while (matcher.find()) {
+                String substring = nowRuns.substring(matcher.start(), matcher.end());
+                if (substring.length()==nowRuns.length()){
+                    runs.set(count,"{替换成功}");
+                }else {
+                    String beforeText=substring.substring(0, matcher.start());
+                    String afterText=substring.substring(matcher.end());
+                    runs.set(count,beforeText);
+                    runs.add(++count, "这是新增的勾选框");
+                    runs.add(++count,afterText);
+                }
+            }
+        }
+runs.forEach(System.out::println);
     }
 }

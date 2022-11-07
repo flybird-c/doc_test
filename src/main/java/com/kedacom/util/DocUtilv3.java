@@ -514,6 +514,8 @@ public class DocUtilv3 {
         //文本缓存,与id对应
         int startRunIndex = -1;
         int endRunIndex = -1;
+        StringBuilder startRunText = new StringBuilder();
+        StringBuilder endRunText = new StringBuilder();
         for (int i = 0; i < runs.size(); i++) {
             //获取本段run的文本
             String text = runs.get(i).toString();
@@ -522,11 +524,6 @@ public class DocUtilv3 {
             String endRunMutilatedReg = "\\$\\{?[^}]*$";
             Pattern compile = Pattern.compile(endRunMutilatedReg);
             Matcher matcher = compile.matcher(text);
-            if (matcher.find()) {
-                //记录残缺编码起始位置
-                startRunIndex = i;
-            }
-            int lastRunSubIndex = -1;
             //寻找下一段匹配的编码末尾
             if (startRunIndex != -1) {
                 String endRunReg = "^\\S*}";
@@ -535,49 +532,53 @@ public class DocUtilv3 {
                 if (matcher1.find()) {
                     //记录末尾位置与字符下标
                     endRunIndex = i;
-                    lastRunSubIndex = matcher1.end();
+                    int end = matcher1.end();
+                    //编码处理
+                    //}之后的文本
+                    String substrAfter = text.substring(end);
+                    endRunText.append(substrAfter);
+                    //}
+                    String substrBefore = text.replace(substrAfter, "");
+                    startRunText.append(substrBefore);
+                }else {
+                    //没到末尾,只附加文本
+                    startRunText.append(text);
                 }
             }
-            //处理跨行文本
+            if (startRunIndex == -1&&matcher.find()) {
+                //记录残缺编码起始位置
+                startRunIndex = i;
+                startRunText.append(text);
+            }
+            //删除中间跨行文本并替换开头结尾的runs文本
             if (startRunIndex != -1 && endRunIndex != -1) {
-                StringBuilder startRunText = new StringBuilder();
-                StringBuilder endRunText = new StringBuilder();
                 //处理文本
                 XWPFRun startRun = runs.get(startRunIndex);
                 XWPFRun endRun = runs.get(endRunIndex);
                 for (int index = startRunIndex; index <= endRunIndex; index++) {
-                    //中间的run属于编码部分
-                    if (index < endRunIndex) {
-                        startRunText.append(idForRuns.get(index));
-                    }
-                    //末尾位置需要区分编码部分与正常文本
-                    if (index == endRunIndex) {
-                        String lastRunText = idForRuns.get(index);
-                        //}之后的文本
-                        String substrAfter1 = lastRunText.substring(lastRunSubIndex);
-                        endRunText.append(substrAfter1);
-                        //}
-                        String substrBefore = lastRunText.replace(substrAfter1, "");
-                        startRunText.append(substrBefore);
-                    }
-                    //结束时删除中间的run和缓存的文本
                     if (index > startRunIndex && index < endRunIndex) {
                         //删除后自动补位,对应下标相应-1
                         paragraph.removeRun(index);
                         endRunIndex--;
                         idForRuns.remove(index);
                         index--;
+                        i--;
                     }
                 }
+                //替换内容
                 //pos代表w:t标签的下标
                 startRun.setText(startRunText.toString(), 0);
-                //替换内容
                 idForRuns.set(startRunIndex, startRunText.toString());
                 endRun.setText(endRunText.toString(), 0);
-                idForRuns.set(endRunIndex, endRunText.toString());
+                //idForRuns.set(endRunIndex, endRunText.toString());
+                //删除末尾的run,计数器减一,重新获取run校验以防出现两个残缺编码在同一列
+                idForRuns.remove(endRunIndex);
+                i--;
                 //重置标志位
                 startRunIndex = -1;
                 endRunIndex = -1;
+                startRunText.delete(0, startRunText.length());
+                endRunText.delete(0, endRunText.length());
             }
         }
         return idForRuns;
@@ -588,7 +589,7 @@ public class DocUtilv3 {
             //获取本段run的文本
             String text = idForRuns.get(i);
             String newText = text;
-            String reg = "\\$\\{\\w+}";
+            String reg = "\\$\\{\\w+[^$]+}";
             Pattern compile = Pattern.compile(reg);
             Matcher matcher = compile.matcher(text);
             //匹配文本key
@@ -609,35 +610,45 @@ public class DocUtilv3 {
     private static void gxkCodeHandler(XWPFParagraph paragraph, List<XWPFRun> runs, List<String> idForRuns) {
         for (int i = 0; i < idForRuns.size(); i++) {
             String nowRuns = idForRuns.get(i);
-            createGxkRuns(paragraph, runs, idForRuns, i, nowRuns, GXK_FLAG_TRUE, WINGDINGS_SQUARE_TURE);
-            createGxkRuns(paragraph, runs, idForRuns, i, nowRuns, GXK_FLAG_FALSE, WINGDINGS_SQUARE_FALSE);
-        }
-
-    }
-
-    private static void createGxkRuns(XWPFParagraph paragraph,
-                                      List<XWPFRun> runs,
-                                      List<String> idForRuns,
-                                      int i,
-                                      String nowRuns,
-                                      String gxkFlagFalse,
-                                      String wingdingsSquareFalse) {
-        String[] split = nowRuns.split(gxkFlagFalse);
-        if (split.length >= 2) {
-            String beforeText = split[0];
-            XWPFRun beforeRun = runs.get(i);
-            beforeRun.setText(beforeText, 0);
-            idForRuns.set(i, beforeText);
-            XWPFRun gxkRun = paragraph.insertNewRun(i + 1);
-            gxkRun.setText(wingdingsSquareFalse);
-            gxkRun.setFontFamily(WINGDINGS_SQUARE);
-            idForRuns.add(i + 1, "此处为勾选框list使用后的list占位符");
-            String afterText = split[1];
-            XWPFRun afterRun = paragraph.insertNewRun(i + 2);
-            afterRun.setUnderline(beforeRun.getUnderline());
-            afterRun.setBold(beforeRun.isBold());
-            afterRun.setText(afterText);
-            idForRuns.add(i + 2, afterText);
+            String reg=GXK_FLAG_TRUE+"|"+GXK_FLAG_FALSE;
+            Pattern compile = Pattern.compile(reg);
+            Matcher matcher = compile.matcher(nowRuns);
+            //偏移量
+            int count=i;
+            while (matcher.find()){
+                String substring = nowRuns.substring(matcher.start(), matcher.end());
+                //这一行仅有这个文本
+                if (substring.length()==nowRuns.length()){
+                    paragraph.removeRun(count);
+                    XWPFRun gxkRun = paragraph.insertNewRun(count);
+                    if (Objects.equals(matcher.group(), GXK_FLAG_FALSE)) {
+                        gxkRun.setText(WINGDINGS_SQUARE_FALSE);
+                    }else {
+                        gxkRun.setText(WINGDINGS_SQUARE_TURE);
+                    }
+                    gxkRun.setFontFamily(WINGDINGS_SQUARE);
+                    idForRuns.set(count, "勾选框替换占位符");
+                }else {
+                    String beforeText = nowRuns.substring(0, matcher.start());
+                    String afterText = nowRuns.substring(matcher.end());
+                    XWPFRun beforeRun = runs.get(count);
+                    beforeRun.setText(beforeText, 0);
+                    idForRuns.set(count, beforeText);
+                    XWPFRun gxkRun = paragraph.insertNewRun(++count);
+                    if (Objects.equals(matcher.group(), GXK_FLAG_FALSE)) {
+                        gxkRun.setText(WINGDINGS_SQUARE_FALSE);
+                    }else {
+                        gxkRun.setText(WINGDINGS_SQUARE_TURE);
+                    }
+                    gxkRun.setFontFamily(WINGDINGS_SQUARE);
+                    idForRuns.add(count, "勾选框替换占位符");
+                    XWPFRun afterRun = paragraph.insertNewRun(++count);
+                    afterRun.setUnderline(beforeRun.getUnderline());
+                    afterRun.setBold(beforeRun.isBold());
+                    afterRun.setText(afterText);
+                    idForRuns.add(count, afterText);
+                }
+            }
         }
     }
 
@@ -645,8 +656,8 @@ public class DocUtilv3 {
         //查找每行编码是勾选框的,结合param参数,将选中的标记为true,未选中的标记为false
         Map<String, String> dollarParamForFlag = new HashMap<>();
         List<String> removeList = new ArrayList<>();
-        String gxkReg = "[A-Z]+_[^}]+";
-        String dollarGxkReg = "\\$\\{[A-Z]+_[^$]+}";
+        String gxkReg = "\\w+_[^}]+";
+        String dollarGxkReg = "\\$\\{\\w+_[^$]+}";
         Pattern gxkCompile = Pattern.compile(gxkReg);
         Pattern dollarCompile = Pattern.compile(dollarGxkReg);
         for (String idForRun : idForRuns) {
