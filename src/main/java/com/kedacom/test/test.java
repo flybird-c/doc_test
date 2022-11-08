@@ -5,6 +5,7 @@ import com.kedacom.util.DocUtilv2;
 import lombok.SneakyThrows;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.springframework.util.StringUtils;
 
 import java.awt.*;
 import java.io.File;
@@ -119,17 +120,20 @@ class testLinkArrayList {
             String reg="FLAG_TRUE";
             Pattern compile = Pattern.compile(reg);
             Matcher matcher = compile.matcher(nowRuns);
-            int count=i;
-            while (matcher.find()) {
+            if (matcher.find()) {
                 String substring = nowRuns.substring(matcher.start(), matcher.end());
                 if (substring.length()==nowRuns.length()){
-                    runs.set(count,"{替换成功}");
+                    runs.set(i,"{替换成功}");
                 }else {
-                    String beforeText=substring.substring(0, matcher.start());
-                    String afterText=substring.substring(matcher.end());
-                    runs.set(count,beforeText);
-                    runs.add(++count, "这是新增的勾选框");
-                    runs.add(++count,afterText);
+                    String beforeText=nowRuns.substring(0, matcher.start());
+                    String afterText=nowRuns.substring(matcher.end());
+                    if (!StringUtils.isEmpty(afterText)) {
+                        runs.set(i,afterText);
+                    }
+                    runs.add(i, "这是新增的勾选框");
+                    if (!StringUtils.isEmpty(beforeText)) {
+                        runs.add(i,beforeText);
+                    }
                 }
             }
         }

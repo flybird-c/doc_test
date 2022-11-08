@@ -608,45 +608,52 @@ public class DocUtilv3 {
     }
 
     private static void gxkCodeHandler(XWPFParagraph paragraph, List<XWPFRun> runs, List<String> idForRuns) {
-        for (int i = 0; i < idForRuns.size(); i++) {
+        for (int i = 0; i < runs.size(); i++) {
             String nowRuns = idForRuns.get(i);
             String reg=GXK_FLAG_TRUE+"|"+GXK_FLAG_FALSE;
             Pattern compile = Pattern.compile(reg);
             Matcher matcher = compile.matcher(nowRuns);
-            //偏移量
-            int count=i;
-            while (matcher.find()){
+            if (matcher.find()){
                 String substring = nowRuns.substring(matcher.start(), matcher.end());
                 //这一行仅有这个文本
                 if (substring.length()==nowRuns.length()){
-                    paragraph.removeRun(count);
-                    XWPFRun gxkRun = paragraph.insertNewRun(count);
+                    paragraph.removeRun(i);
+                    XWPFRun gxkRun = paragraph.insertNewRun(i);
                     if (Objects.equals(matcher.group(), GXK_FLAG_FALSE)) {
                         gxkRun.setText(WINGDINGS_SQUARE_FALSE);
                     }else {
                         gxkRun.setText(WINGDINGS_SQUARE_TURE);
                     }
                     gxkRun.setFontFamily(WINGDINGS_SQUARE);
-                    idForRuns.set(count, "勾选框替换占位符");
+                    idForRuns.set(i, "勾选框替换占位符");
                 }else {
                     String beforeText = nowRuns.substring(0, matcher.start());
                     String afterText = nowRuns.substring(matcher.end());
-                    XWPFRun beforeRun = runs.get(count);
-                    beforeRun.setText(beforeText, 0);
-                    idForRuns.set(count, beforeText);
-                    XWPFRun gxkRun = paragraph.insertNewRun(++count);
+                    //提前读取格式
+                    XWPFRun afterRuns = runs.get(i);
+                    UnderlinePatterns underline = afterRuns.getUnderline();
+                    boolean bold = afterRuns.isBold();
+                    if (!StringUtils.isEmpty(afterText)){
+                        afterRuns.setText(afterText, 0);
+                        idForRuns.set(i, afterText);
+                    }
+                    //删除替换为勾选框
+                    paragraph.removeRun(i);
+                    XWPFRun gxkRun = paragraph.insertNewRun(i);
                     if (Objects.equals(matcher.group(), GXK_FLAG_FALSE)) {
                         gxkRun.setText(WINGDINGS_SQUARE_FALSE);
                     }else {
                         gxkRun.setText(WINGDINGS_SQUARE_TURE);
                     }
                     gxkRun.setFontFamily(WINGDINGS_SQUARE);
-                    idForRuns.add(count, "勾选框替换占位符");
-                    XWPFRun afterRun = paragraph.insertNewRun(++count);
-                    afterRun.setUnderline(beforeRun.getUnderline());
-                    afterRun.setBold(beforeRun.isBold());
-                    afterRun.setText(afterText);
-                    idForRuns.add(count, afterText);
+                    idForRuns.set(i, "勾选框替换占位符");
+                    if (!StringUtils.isEmpty(beforeText)){
+                        XWPFRun beforeRun = paragraph.insertNewRun(i);
+                        beforeRun.setUnderline(underline);
+                        beforeRun.setBold(bold);
+                        beforeRun.setText(beforeText);
+                        idForRuns.add(i, beforeText);
+                    }
                 }
             }
         }
