@@ -1,5 +1,7 @@
 package com.kedacom.util;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.aspose.words.SaveFormat;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -437,7 +440,178 @@ public class DocUtilv3 {
         }
 
     }
+    private static void creatTableInParagraph(CustomXWPFDocument document , Map<String, Object> param){
+        Iterator<XWPFTable> tablesIterator = document.getTablesIterator();
+        if (!tablesIterator.hasNext()){
+            return;
+        }
+        List<XWPFTable> tables = document.getTables();
+        for (int i = 0; i < tables.size(); i++) {
+            //只处理行数大于等于2的表格，且不循环表头
+            XWPFTable table = tables.get(i);
+            CTTblPr tblPr = table.getCTTbl().getTblPr();
+            Set<String> strings = param.keySet();
+            for (String string : strings) {
+                if (!tblPr.toString().contains(string)){
+                    continue;
+                }
+                Object o = param.get(string);
+                if (o instanceof ArrayList<?>){
+                    List<List<Object>> lists = handleTableDates(o);
+                    insertTableByCode(lists,string,table);
+                }
+            }
+        }
 
+    }
+    /**
+     * 处理接受的list实体
+     * @param obj
+     * @return
+     */
+    private static List<List<Object>> handleTableDates(Object obj) {
+        log.info("【处理接受的list实体】 开始" + obj);
+        List<List<Object>> allList = new ArrayList<>();
+        if (obj == null) {
+            return allList;
+        }
+        if (obj instanceof ArrayList<?>) {
+            List<Object> obj1 = (List)obj;
+            for (Object o : obj1) {
+                if (o instanceof ArrayList<?>){
+                    return (List)obj;
+                }
+                handleTableDates(allList,o);
+            }
+        }
+        log.info("【处理接受的list实体】 结束" + allList);
+        return allList;
+    }
+    private static void handleTableDates(List<List<Object>> allList , Object o) {
+        Class<?> aClass = o.getClass();
+        List<Object> rowList = new ArrayList<>();
+        if (o instanceof JSONArray){
+            List<Object> list = JSON.parseArray(o.toString(), Object.class);
+            for (Object o1 : list) {
+                rowList.add(o1.toString());
+            }
+            allList.add(rowList);
+            return ;
+        }
+        Field[] fields = aClass.getDeclaredFields();
+        try {
+            for (Field field : fields) {
+                field.setAccessible(true);
+                rowList.add(field.get(o).toString());
+            }
+            allList.add(rowList);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    private static void insertTableByCode(List<List<Object>> lists , String string , XWPFTable table){
+        if (!CollectionUtils.isEmpty(lists)){
+            if(string.equals("SSCWJCJL")){
+                insertTable(table, lists, 5 , 11 , 1,1);
+            } else  if(string.equals("YHDJL")){
+                insertTable(table, lists, 11 , 2 , 1,1);
+            }else {
+                insertTable(table, lists, table.getNumberOfRows() - 2 , 2 , 1,0);
+            }
+        }
+    }
+    private static void insertTable(XWPFTable table,List<List<Object>> daList , Integer nowTableSize ,
+                                    Integer insertTablePos , Integer insertDatePos , Integer flag){
+        addNewTableRow(table,nowTableSize,daList,insertDatePos);
+        //创建行,根据需要插入的数据添加新行，不处理表头
+        for(int i = 0; i < daList.size(); i++){
+            List<XWPFTableCell> cells = table.getRow(i + insertTablePos - insertDatePos).getTableCells();
+            for(int j = 0; j < cells.size(); j++){
+                XWPFTableCell tableCell = cells.get(j);
+                String insertDate = daList.get(i).get(j).toString() ;
+                List<XWPFParagraph> paragraphs = tableCell.getParagraphs();
+                insertTableDate(paragraphs,insertDate,flag);
+            }
+        }
+    }
+    private static void insertTableDate(List<XWPFParagraph> paragraphs,String insertDate,Integer flag){
+        for (XWPFParagraph paragraph : paragraphs) {
+            // 如果run为空，判定新插入的数据，创建新的run,设置字体样式
+            List<XWPFRun> runs = paragraph.getRuns();
+            if (ObjectUtils.isEmpty(runs)){
+                handleInsertTableDate(paragraph,insertDate,flag);
+                // 复制出来，新插入的行，runs不为空
+            }else {
+                for (int i1 = 0; i1 < runs.size(); i1++) {
+                    paragraph.removeRun(i1);
+                    handleInsertTableDate(paragraph,insertDate,flag);
+                }
+            }
+        }
+    }
+    private static void handleInsertTableDate(XWPFParagraph paragraph , String insertDate, Integer flag){
+        XWPFRun run = paragraph.createRun();
+        // 处理清单中的字体
+        if (flag.equals(0)) {
+            // 4号字体 大小 14
+            run.setFontSize(14);
+            run.setText(insertDate);
+            run.setFontFamily("仿宋_GB2312");
+            //处理登记表中的字体
+        }else if (flag.equals(1)){
+            // 小4字体 大小 12
+            run.setFontSize(12);
+            run.setText(insertDate);
+            run.setFontFamily("仿宋");
+        }
+    }
+    private static void addNewTableRow(XWPFTable table, Integer nowTableSize, List<List<Object>> daList,Integer insertTablePos){
+        log.info("现有文档中的表格行数: " + nowTableSize );
+        //实际需要插入的行数
+        int size1 = daList.size();
+        log.info("实际需要插入的行数: " + size1);
+
+        if (size1 > nowTableSize ){
+            for(int i = 0; i < size1 - nowTableSize; i++){
+                //添加一个新行
+                XWPFTableRow targetRow= table.insertNewTableRow(insertTablePos);
+                XWPFTableRow sourceRow = table.getRow(insertTablePos - 1);
+                targetRow.getCtRow().setTrPr(sourceRow.getCtRow().getTrPr());
+                List<XWPFTableCell> tableCells = sourceRow.getTableCells();
+                if (CollectionUtils.isEmpty(tableCells)) {
+                    return;
+                }
+                createCellsAndCopyStyles(targetRow,sourceRow);
+            }
+        }
+    }
+    private static void createCellsAndCopyStyles(XWPFTableRow targetRow, XWPFTableRow sourceRow) {
+        List<XWPFTableCell> tableCells = sourceRow.getTableCells();
+        for (XWPFTableCell sourceCell : tableCells) {
+            XWPFTableCell newCell = targetRow.addNewTableCell();
+            newCell.getCTTc().setTcPr(sourceCell.getCTTc().getTcPr());
+            List<XWPFParagraph> sourceParagraphs = sourceCell.getParagraphs();
+            if (CollectionUtils.isEmpty(sourceParagraphs)) {
+                continue;
+            }
+            XWPFParagraph sourceParagraph = sourceParagraphs.get(0);
+            List<XWPFParagraph> targetParagraphs = newCell.getParagraphs();
+            if (CollectionUtils.isEmpty(targetParagraphs)) {
+                XWPFParagraph p = newCell.addParagraph();
+                p.getCTP().setPPr(sourceParagraph.getCTP().getPPr());
+                XWPFRun run = p.getRuns().isEmpty() ? p.createRun() : p.getRuns().get(0);
+                run.setFontFamily(sourceParagraph.getRuns().get(0).getFontFamily());
+            } else {
+                XWPFParagraph p = targetParagraphs.get(0);
+                p.getCTP().setPPr(sourceParagraph.getCTP().getPPr());
+                XWPFRun run = p.getRuns().isEmpty() ? p.createRun() : p.getRuns().get(0);
+                List<XWPFRun> runs = sourceParagraph.getRuns();
+                if (!CollectionUtils.isEmpty(runs)){
+                    run.setFontFamily(runs.get(0).getFontFamily());
+                }
+            }
+        }
+    }
 
 
 
@@ -454,6 +628,7 @@ public class DocUtilv3 {
                     paragraphHandler(paragraph, param, document);
                 }
             }
+            creatTableInParagraph(document,param);
             //处理表格 还有表格增行操作
             List<XWPFTable> tables = document.getTables();
             for (XWPFTable table : tables) {
