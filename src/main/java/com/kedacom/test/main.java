@@ -30,6 +30,15 @@ public class main {
         map.put("JDYT2","刑事");
         map.put("JDLX","");
         map.put("CCZP","C:\\Users\\lzp\\Pictures\\pm.jpg");
+        map.put("ITEM",2);
+        map.put("SZNF",2022);
+        map.put("SZYF",11);
+        map.put("SZRQ",8);
+
+        map.put("SZXS","");
+        map.put("XM","");
+        map.put("JSXM","");
+        map.put("JSDH","");
         //String s = replaceWordCode_v1(map, path);
         //System.out.println(s);
         //String s2 = replaceWordCode_v2(map, path);

@@ -447,9 +447,6 @@ public class DocUtilv3 {
         String targetPath = getTargetPath(srcWordPath);
         try (FileOutputStream fos = new FileOutputStream(targetPath);
              CustomXWPFDocument document = new CustomXWPFDocument(new FileInputStream(srcWordPath))) {
-            //处理item系列编码
-            Map<String, Object> itemParam = handItemCodes(param);
-            param.putAll(itemParam);
             //获取所有段落
             List<XWPFParagraph> paragraphs = document.getParagraphs();
             if (!CollectionUtils.isEmpty(paragraphs)) {
@@ -500,12 +497,53 @@ public class DocUtilv3 {
         List<String> idForRuns = runsMultilineCodeHandler(paragraph, runs);
         //文本勾选框编码处理
         getGXKParam(param, idForRuns);
+        //ITEM系列编码处理t
+        getITEMParam(param,idForRuns);
         //文本编码处理
         textCodeHandler(param, runs, idForRuns);
         //勾选框处理
         gxkCodeHandler(paragraph, runs, idForRuns);
         //图片编码处理
         picCodeHandler(param, runs, paragraph, document);
+    }
+
+    private static void getITEMParam(Map<String, Object> param, List<String> idForRuns) {
+        Object item = param.get("ITEM");
+        if (item !=null){
+            Map<String,String> itemMap=new HashMap<>();
+            //匹配所有item编码
+            String reg="[\\u4e00-\\u9fa5_a-zA-Z0-9]+-[0-9]+";
+            Pattern codeCompile = Pattern.compile(reg);
+            String dollarReg="\\$\\{[\\u4e00-\\u9fa5_a-zA-Z0-9]+-[0-9]+}";
+            Pattern dollarCompile = Pattern.compile(dollarReg);
+            for (String idForRun : idForRuns) {
+                Matcher matcher = dollarCompile.matcher(idForRun);
+                while (matcher.find()){
+                    String dollarCode = matcher.group();
+                    Matcher codeMatcher = codeCompile.matcher(dollarCode);
+                    if (codeMatcher.find()) {
+                        String code_num = codeMatcher.group();
+                        if (itemMap.get(code_num)==null){
+                            String[] split = code_num.split("-");
+                            String itemNumber = split[split.length - 1];
+                            if (Objects.equals(itemNumber, item.toString())) {
+                                Object o = param.get(split[0]);
+                                if (o!=null) {
+                                    itemMap.put(code_num,o.toString());
+                                }else {
+                                    itemMap.put(code_num,"    ");
+                                }
+                            }
+                            //其他item默认为空
+                            else {
+                                itemMap.put(code_num,"    ");
+                            }
+                        }
+                    }
+                }
+            }
+            param.putAll(itemMap);
+        }
     }
 
 
@@ -595,7 +633,11 @@ public class DocUtilv3 {
             //匹配文本key
             while (matcher.find()) {
                 for (Map.Entry<String, Object> entry : param.entrySet()) {
-                    newText = newText.replace(entry.getKey(), entry.getValue().toString());
+                    if (Objects.equals(entry.getKey(), "ITEM")){
+                    newText=newText.replace("${"+entry.getKey()+"}","");
+                    }else {
+                        newText = newText.replace("${"+entry.getKey()+"}", entry.getValue().toString());
+                    }
                 }
             }
             //如果文本有编码被替换,则更新run
@@ -660,8 +702,8 @@ public class DocUtilv3 {
         //查找每行编码是勾选框的,结合param参数,将选中的标记为true,未选中的标记为false
         Map<String, String> dollarParamForFlag = new HashMap<>();
         List<String> removeList = new ArrayList<>();
-        String gxkReg = "\\w+_[^}]+";
-        String dollarGxkReg = "\\$\\{\\w+_[^$]+}";
+        String gxkReg = "[A-Z0-9]+_[\\u4e00-\\u9fa5]+";
+        String dollarGxkReg = "\\$\\{[A-Z0-9]+_[\\u4e00-\\u9fa5]+}";
         Pattern gxkCompile = Pattern.compile(gxkReg);
         Pattern dollarCompile = Pattern.compile(dollarGxkReg);
         for (String idForRun : idForRuns) {
@@ -690,10 +732,10 @@ public class DocUtilv3 {
                     //如果值相等,则增加true标记,不相等增加false标记
                     if (flag) {
                         log.info("勾选框值为true");
-                        dollarParamForFlag.put(dollarGxkStr, GXK_FLAG_TRUE);
+                        dollarParamForFlag.put(gxkCode, GXK_FLAG_TRUE);
                     } else {
                         log.info("勾选框值为false");
-                        dollarParamForFlag.put(dollarGxkStr, GXK_FLAG_FALSE);
+                        dollarParamForFlag.put(gxkCode, GXK_FLAG_FALSE);
                     }
                     //原本param的参数移除替换
                     removeList.add(split[0]);
