@@ -633,12 +633,9 @@ public class DocUtilv3 {
                     XWPFRun afterRuns = runs.get(i);
                     UnderlinePatterns underline = afterRuns.getUnderline();
                     boolean bold = afterRuns.isBold();
-                    if (!StringUtils.isEmpty(afterText)){
-                        afterRuns.setText(afterText, 0);
-                        idForRuns.set(i, afterText);
-                    }
+                    afterRuns.setText(afterText, 0);
+                    idForRuns.set(i, afterText);
                     //删除替换为勾选框
-                    paragraph.removeRun(i);
                     XWPFRun gxkRun = paragraph.insertNewRun(i);
                     if (Objects.equals(matcher.group(), GXK_FLAG_FALSE)) {
                         gxkRun.setText(WINGDINGS_SQUARE_FALSE);
@@ -646,7 +643,7 @@ public class DocUtilv3 {
                         gxkRun.setText(WINGDINGS_SQUARE_TURE);
                     }
                     gxkRun.setFontFamily(WINGDINGS_SQUARE);
-                    idForRuns.set(i, "勾选框替换占位符");
+                    idForRuns.add(i, "勾选框替换占位符");
                     if (!StringUtils.isEmpty(beforeText)){
                         XWPFRun beforeRun = paragraph.insertNewRun(i);
                         beforeRun.setUnderline(underline);
