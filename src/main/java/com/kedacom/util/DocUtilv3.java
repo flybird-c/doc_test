@@ -921,17 +921,6 @@ public class DocUtilv3 {
         param.putAll(dollarParamForFlag);
     }
 
-    public static Map<String, Object> handItemCodes(Map<String, Object> param) {
-        Object item = param.get("ITEM");
-        Map<String, Object> itemMap = new HashMap<>();
-        if (!ObjectUtils.isEmpty(item)) {
-            for (Map.Entry<String, Object> entry : param.entrySet()) {
-                itemMap.put(entry.getKey() + "-" + item, entry.getValue());
-            }
-        }
-        return itemMap;
-    }
-
     private static String getTargetPath(String srcWordPath) {
         String[] split = srcWordPath.split("\\.");
         String filePaths = split[0];
