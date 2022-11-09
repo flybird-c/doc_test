@@ -3,7 +3,6 @@ package com.kedacom.util;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.aspose.words.SaveFormat;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.xwpf.converter.xhtml.XHTMLConverter;
@@ -29,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * @author : lzp
@@ -134,12 +132,19 @@ public class DocUtilv3 {
         }
     }
     private static void getTableCodInParagraph(List<String> codes, List<String> codeList,XWPFTable table){
+        String tableReg="<w:tbl[Dd]escription\\sw:val=\"(?<code>[A-Z]+)\"/>";
+        Pattern compile = Pattern.compile(tableReg);
         CTTblPr tblPr = table.getCTTbl().getTblPr();
+        String tblpr = tblPr.toString();
         if (!ObjectUtils.isEmpty(tblPr)) {
-            for (String code : codeList) {
-                if (tblPr.toString().equals(code)) {
-                    log.info("【获取表格编码】:" + tblPr.toString());
-                    codes.add(code);
+            Matcher matcher = compile.matcher(tblpr);
+            while (matcher.find()){
+                String codeStr = matcher.group("code");
+                for (String code : codeList) {
+                    if (codeStr.equals(code)) {
+                        log.info("【获取表格编码】:{}",codeStr);
+                        codes.add(code);
+                    }
                 }
             }
         }
