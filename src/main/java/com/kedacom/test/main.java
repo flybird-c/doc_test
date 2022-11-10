@@ -22,23 +22,35 @@ public class main {
     @SneakyThrows
     public static void main(String[] args) {
         String path="C:\\Users\\lzp\\Desktop\\doc测试\\多个复选框同一行 表格JSZJQD.docx";
-        List<String> codeList=new ArrayList<>();
-        codeList.add("JSZJQD");
+        //List<String> codeList=new ArrayList<>();
+        //codeList.add("JSZJQD");
         //List codeList_v1 = DocUtilv1.getDocCodes(codeList, path);
         //System.out.println(codeList_v1);
         //List codeList_v2 = DocUtilv2.getDocCodes(codeList, path);
         //System.out.println(codeList_v2);
-        List codeList_v3 = DocUtilv3.getDocCodes(codeList, path);
-        System.out.println(codeList_v3);
+        //List codeList_v3 = DocUtilv3.getDocCodes(codeList, path);
+        //System.out.println(codeList_v3);
 
-        //Map<String,Object> map=new HashMap<>();
-        //map.put("JDYT2","刑事");
+        Map<String,Object> map=new HashMap<>();
+        //map.put("JDYT2","刑事,行政");
         //map.put("JDLX","");
         //map.put("CCZP","C:\\Users\\lzp\\Pictures\\pm.jpg");
         //map.put("ITEM",2);
         //map.put("SZNF",2022);
         //map.put("SZYF",11);
         //map.put("SZRQ",8);
+        List<List<String>> listList=new ArrayList<>();
+        List<String> stringList=new ArrayList<>();
+        stringList.add("1");
+        stringList.add("2");
+        stringList.add("3");
+        stringList.add("4");
+        stringList.add("5");
+        listList.add(stringList);
+        List<String> stringList1=new ArrayList<>();
+        stringList1.add("第二行第一个");
+        listList.add(stringList1);
+        map.put("JSZJQD",listList);
         //
         //map.put("SZXS","");
         //map.put("XM","");
@@ -48,8 +60,8 @@ public class main {
         ////System.out.println(s);
         ////String s2 = replaceWordCode_v2(map, path);
         ////System.out.println(s2);
-        //String s3 = DocUtilv3.replaceWordCode(map, path);
-        //System.out.println(s3);
+        String s3 = DocUtilv3.replaceWordCode(map, path);
+        System.out.println(s3);
     }
     public static  List getCodeList_v1(List<String> codeList,String path){
         return DocUtilv1.getDocCodes(codeList,path);

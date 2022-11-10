@@ -899,26 +899,28 @@ public class DocUtilv3 {
                     String[] split = gxkCode.split("_");
                     log.info("获取编码:{}", split[0]);
                     Object o = param.get(split[0]);
-                    String values = o.toString();
-                    log.info("param编码值为:{}", values);
-                    String[] valueList = values.split(",");
-                    boolean flag = false;
-                    for (String value : valueList) {
-                        if (Objects.equals(split[1], value)) {
-                            flag = true;
-                            break;
+                    if (o!=null){
+                        String values = o.toString();
+                        log.info("param编码值为:{}", values);
+                        String[] valueList = values.split(",");
+                        boolean flag = false;
+                        for (String value : valueList) {
+                            if (Objects.equals(split[1], value)) {
+                                flag = true;
+                                break;
+                            }
                         }
+                        //如果值相等,则增加true标记,不相等增加false标记
+                        if (flag) {
+                            log.info("勾选框值为true");
+                            dollarParamForFlag.put(gxkCode, GXK_FLAG_TRUE);
+                        } else {
+                            log.info("勾选框值为false");
+                            dollarParamForFlag.put(gxkCode, GXK_FLAG_FALSE);
+                        }
+                        //原本param的参数移除替换
+                        removeList.add(split[0]);
                     }
-                    //如果值相等,则增加true标记,不相等增加false标记
-                    if (flag) {
-                        log.info("勾选框值为true");
-                        dollarParamForFlag.put(gxkCode, GXK_FLAG_TRUE);
-                    } else {
-                        log.info("勾选框值为false");
-                        dollarParamForFlag.put(gxkCode, GXK_FLAG_FALSE);
-                    }
-                    //原本param的参数移除替换
-                    removeList.add(split[0]);
                 }
             }
         }
