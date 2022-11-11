@@ -21,7 +21,7 @@ import java.util.Map;
 public class main {
     @SneakyThrows
     public static void main(String[] args) {
-        String path="C:\\Users\\lzp\\Desktop\\doc测试\\多个复选框同一行 表格JSZJQD.docx";
+        String path="C:\\Users\\lzp\\Desktop\\doc测试\\所有元素测试.docx";
         //List<String> codeList=new ArrayList<>();
         //codeList.add("JSZJQD");
         //List codeList_v1 = DocUtilv1.getDocCodes(codeList, path);
@@ -49,6 +49,10 @@ public class main {
         listList.add(stringList);
         List<String> stringList1=new ArrayList<>();
         stringList1.add("第二行第一个");
+        stringList1.add("第二个");
+        stringList1.add("第三个");
+        stringList1.add("第四个");
+        stringList1.add("第五个");
         listList.add(stringList1);
         map.put("JSZJQD",listList);
         //
@@ -56,8 +60,8 @@ public class main {
         //map.put("XM","");
         //map.put("JSXM","");
         //map.put("JSDH","");
-        ////String s = replaceWordCode_v1(map, path);
-        ////System.out.println(s);
+        //String s = replaceWordCode_v1(map, path);
+        //System.out.println(s);
         ////String s2 = replaceWordCode_v2(map, path);
         ////System.out.println(s2);
         String s3 = DocUtilv3.replaceWordCode(map, path);

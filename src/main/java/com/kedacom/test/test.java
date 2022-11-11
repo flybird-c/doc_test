@@ -3,8 +3,10 @@ package com.kedacom.test;
 import com.kedacom.util.CustomXWPFDocument;
 import com.kedacom.util.DocUtilv2;
 import lombok.SneakyThrows;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.*;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTJc;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRow;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STJc;
 import org.springframework.util.StringUtils;
 
 import java.awt.*;
@@ -25,40 +27,51 @@ import java.util.regex.Pattern;
  */
 public class test {
     public static void main(String[] args) {
-        String path = "C:\\Users\\lzp\\Desktop\\doc测试\\多个复选框同一行.docx";
+        String path = "C:\\Users\\lzp\\Desktop\\doc测试\\空白表格.docx";
         Map<String, Object> param = new HashMap<>();
-        param.put("${JDLX}", "--成功替换!--");
-        String s = "C:\\Users\\lzp\\Desktop\\doc测试\\多个复选框同一行" + (new Date()).getTime() + ".docx";
+        List<List<String>> listList=new ArrayList<>();
+        List<String> stringList=new ArrayList<>();
+        stringList.add("1");
+        stringList.add("2");
+        stringList.add("3");
+        stringList.add("4");
+        stringList.add("5");
+        listList.add(stringList);
+        List<String> stringList1=new ArrayList<>();
+        stringList1.add("第二行第一个");
+        listList.add(stringList1);
+        param.put("JSZJQD",listList);
+        String s = "C:\\Users\\lzp\\Desktop\\doc测试\\空白表格" + (new Date()).getTime() + ".docx";
         File file = new File(s);
         try (FileOutputStream fos = new FileOutputStream(file);
              CustomXWPFDocument document = new CustomXWPFDocument(new FileInputStream(path))) {
-
-            List<XWPFParagraph> paragraphs = document.getParagraphs();
-            for (XWPFParagraph paragraph : paragraphs) {
-                List<XWPFRun> runs = paragraph.getRuns();
-                Map<Integer, String> idForRuns = new HashMap<>(256);
-                //文本缓存,与id对应
-                for (int i = 0; i < runs.size(); i++) {
-                    idForRuns.put(i, runs.get(i).toString());
+            List<XWPFTable> tables = document.getTables();
+            if (tables.size()==0){
+                XWPFTable table = document.createTable();
+                table.setWidth(8973);
+                //table.setCellMargins(0,0,0,0);
+                //table.setStyleID();
+                //table.setInsideVBorder(, , , );
+                CTJc jc = table.getCTTbl().getTblPr().getJc();
+                if (jc==null){
+                    jc = table.getCTTbl().getTblPr().addNewJc();
                 }
-                for (int i = 0; i < runs.size(); i++) {
-                    //获取本段run的文本
-                    String text = idForRuns.get(i);
-                    String newText = text;
-                    String reg = "\\$\\{\\S+}";
-                    Pattern compile = Pattern.compile(reg);
-                    for (Map.Entry<String, Object> entry : param.entrySet()) {
-                        //匹配文本key
-                        Matcher matcher = compile.matcher(entry.getKey());
-                        while (matcher.find()) {
-                            newText = newText.replace(entry.getKey(), entry.getValue().toString());
+                jc.setVal(STJc.CENTER);
+                List<XWPFTableRow> rows = table.getRows();
+                if (rows.size()!=0){
+                    XWPFTableRow xwpfTableRow = rows.get(0);
+                    xwpfTableRow.setHeight(900);
+                    for (int i = 0; i < 5; i++) {
+                        XWPFTableCell cell = xwpfTableRow.getCell(i);
+                        if (cell==null){
+                             cell = xwpfTableRow.createCell();
                         }
+                        cell.setVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
+                        //cell.setText("文本"+i);
+                        XWPFParagraph xwpfParagraph = cell.addParagraph();
+                        XWPFRun run = xwpfParagraph.createRun();
+                        run.setText("文本"+i);
                     }
-                    XWPFRun xwpfRun = runs.get(i);
-                    xwpfRun.setText(newText, 0);
-                    //paragraph.removeRun(i);
-                    //XWPFRun xwpfRun1 = paragraph.insertNewRun(i);
-                    //xwpfRun1.setText(newText);
                 }
             }
             document.write(fos);
