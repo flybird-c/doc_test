@@ -2,18 +2,15 @@ package com.kedacom.test;
 
 import com.kedacom.util.CustomXWPFDocument;
 import com.kedacom.util.DocUtilv2;
-import lombok.SneakyThrows;
 import org.apache.poi.xwpf.usermodel.*;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTJc;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRow;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.STJc;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTcPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTrPr;
 import org.springframework.util.StringUtils;
 
-import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -27,56 +24,119 @@ import java.util.regex.Pattern;
  */
 public class test {
     public static void main(String[] args) {
-        String path = "C:\\Users\\lzp\\Desktop\\doc测试\\空白表格.docx";
+        String path = "C:\\Users\\lzp\\Desktop\\doc测试\\纯表格测试.docx";
         Map<String, Object> param = new HashMap<>();
-        List<List<String>> listList=new ArrayList<>();
-        List<String> stringList=new ArrayList<>();
+        List<List<String>> listList = new ArrayList<>();
+        List<String> stringList = new ArrayList<>();
         stringList.add("1");
         stringList.add("2");
         stringList.add("3");
         stringList.add("4");
         stringList.add("5");
         listList.add(stringList);
-        List<String> stringList1=new ArrayList<>();
+        List<String> stringList1 = new ArrayList<>();
         stringList1.add("第二行第一个");
         listList.add(stringList1);
-        param.put("JSZJQD",listList);
-        String s = "C:\\Users\\lzp\\Desktop\\doc测试\\空白表格" + (new Date()).getTime() + ".docx";
+        param.put("JSZJQD", listList);
+        String s = "C:\\Users\\lzp\\Desktop\\doc测试\\纯表格测试" + (new Date()).getTime() + ".docx";
         File file = new File(s);
         try (FileOutputStream fos = new FileOutputStream(file);
              CustomXWPFDocument document = new CustomXWPFDocument(new FileInputStream(path))) {
             List<XWPFTable> tables = document.getTables();
-            if (tables.size()==0){
-                XWPFTable table = document.createTable();
-                table.setWidth(8973);
-                //table.setCellMargins(0,0,0,0);
-                //table.setStyleID();
-                //table.setInsideVBorder(, , , );
-                CTJc jc = table.getCTTbl().getTblPr().getJc();
-                if (jc==null){
-                    jc = table.getCTTbl().getTblPr().addNewJc();
-                }
-                jc.setVal(STJc.CENTER);
-                List<XWPFTableRow> rows = table.getRows();
-                if (rows.size()!=0){
-                    XWPFTableRow xwpfTableRow = rows.get(0);
-                    xwpfTableRow.setHeight(900);
-                    for (int i = 0; i < 5; i++) {
-                        XWPFTableCell cell = xwpfTableRow.getCell(i);
-                        if (cell==null){
-                             cell = xwpfTableRow.createCell();
-                        }
-                        cell.setVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
-                        //cell.setText("文本"+i);
-                        XWPFParagraph xwpfParagraph = cell.addParagraph();
-                        XWPFRun run = xwpfParagraph.createRun();
-                        run.setText("文本"+i);
-                    }
+            XWPFTable xwpfTable = tables.get(0);
+            List<XWPFTableRow> rows = xwpfTable.getRows();
+            if (listList.size() > 1 && rows.size() >= 1) {
+                insertRowAndCopyStyle(rows.get(0), listList.size() - rows.size(), 2, tables.get(0));
+            }
+            for (int i = 0; i < rows.size(); i++) {
+                XWPFTableRow xwpfTableRow = rows.get(i);
+                List<XWPFTableCell> tableCells = xwpfTableRow.getTableCells();
+                for (int j = 0; j < tableCells.size(); j++) {
+
                 }
             }
+            //if (tables.size()==0){
+            //    XWPFTable table = document.createTable();
+            //    table.setWidth(8973);
+            //    //table.setCellMargins(0,0,0,0);
+            //    //table.setStyleID();
+            //    //table.setInsideVBorder(, , , );
+            //
+            //    //表格居中
+            //    CTJc jc = table.getCTTbl().getTblPr().getJc();
+            //    if (jc==null){
+            //        jc = table.getCTTbl().getTblPr().addNewJc();
+            //    }
+            //    jc.setVal(STJc.CENTER);
+            //    //刚刚创建的表格类默认会有一行row,row内默认会有一个单元格cell
+            //    List<XWPFTableRow> rows = table.getRows();
+            //    if (rows.size()!=0){
+            //        XWPFTableRow xwpfTableRow = rows.get(0);
+            //        xwpfTableRow.setHeight(900);
+            //        for (int i = 0; i < 5; i++) {
+            //            XWPFTableCell cell = xwpfTableRow.getCell(i);
+            //            if (cell==null){
+            //                 cell = xwpfTableRow.createCell();
+            //            }
+            //            cell.setVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
+            //            //cell可以直接设置文本,cell默认带一个<w:p>标签;在run里创建相当于会再创建一个<w:p>标签,相当于脱裤子放屁了
+            //            //XWPFParagraph xwpfParagraph = cell.addParagraph();
+            //            //XWPFRun run = xwpfParagraph.createRun();
+            //            //run.setText("文本"+i+"runs");
+            //            cell.setText("文本"+i+"cell");
+            //        }
+            //    }
+            //}
             document.write(fos);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    /** 插入行,复制样式
+     * @param sourceRow 复制样式的行
+     * @param i 循环创建的次数
+     * @param insertTablePos 插入表格的位置
+     * @param table 需要插入的表格
+     */
+    private static void insertRowAndCopyStyle(XWPFTableRow sourceRow, int i, int insertTablePos, XWPFTable table) {
+        //行样式
+        CTTrPr rowPr = sourceRow.getCtRow().getTrPr();
+        int cellCount=-1;
+       //单元格样式
+        CTTcPr cellPr = null;
+        //段落样式
+        CTPPr pPr = null;
+        //字体大小
+        int fontSize = -1;
+        //字体样式
+        String fontFamily = null;
+        List<XWPFTableCell> tableCells = sourceRow.getTableCells();
+        if (tableCells.size() >= 1) {
+            cellCount=tableCells.size();
+            XWPFTableCell xwpfTableCell = tableCells.get(0);
+            cellPr = xwpfTableCell.getCTTc().getTcPr();
+            List<XWPFParagraph> paragraphs = xwpfTableCell.getParagraphs();
+            if (paragraphs.size() >= 1) {
+                XWPFParagraph xwpfParagraph = paragraphs.get(0);
+                pPr = xwpfParagraph.getCTP().getPPr();
+                List<XWPFRun> runs = xwpfParagraph.getRuns();
+                if (runs.size() >= 1) {
+                    XWPFRun xwpfRun = runs.get(0);
+                    fontSize = xwpfRun.getFontSize();
+                    fontFamily = xwpfRun.getFontFamily();
+                }
+            }
+        }
+        for (int j = 0; j < i; j++) {
+            XWPFTableRow targetRow = table.insertNewTableRow(insertTablePos);
+            targetRow.getCtRow().setTrPr(sourceRow.getCtRow().getTrPr());
+            for (int k = 0; k < cellCount; k++) {
+                XWPFTableCell cell = targetRow.createCell();
+                cell.getCTTc().setTcPr(cellPr);
+                XWPFParagraph xwpfParagraph = cell.getParagraphs().get(0);
+                xwpfParagraph.getCTP().setPPr(pPr);
+            }
         }
     }
 }
@@ -123,33 +183,33 @@ class testLinkHashMap {
 
 class testLinkArrayList {
     public static void main(String[] args) {
-        List<String> runs=new ArrayList<>();
-        String con="FLAG_TRUEFLAG_TRUE";
+        List<String> runs = new ArrayList<>();
+        String con = "FLAG_TRUEFLAG_TRUE";
         runs.add("这是文本");
         runs.add(con);
-        runs.add("这是二段文本"+con+"这是二段文本后续");
+        runs.add("这是二段文本" + con + "这是二段文本后续");
         for (int i = 0; i < runs.size(); i++) {
             String nowRuns = runs.get(i);
-            String reg="FLAG_TRUE";
+            String reg = "FLAG_TRUE";
             Pattern compile = Pattern.compile(reg);
             Matcher matcher = compile.matcher(nowRuns);
             if (matcher.find()) {
                 String substring = nowRuns.substring(matcher.start(), matcher.end());
-                if (substring.length()==nowRuns.length()){
-                    runs.set(i,"{替换成功}");
-                }else {
-                    String beforeText=nowRuns.substring(0, matcher.start());
-                    String afterText=nowRuns.substring(matcher.end());
+                if (substring.length() == nowRuns.length()) {
+                    runs.set(i, "{替换成功}");
+                } else {
+                    String beforeText = nowRuns.substring(0, matcher.start());
+                    String afterText = nowRuns.substring(matcher.end());
                     if (!StringUtils.isEmpty(afterText)) {
-                        runs.set(i,afterText);
+                        runs.set(i, afterText);
                     }
                     runs.add(i, "这是新增的勾选框");
                     if (!StringUtils.isEmpty(beforeText)) {
-                        runs.add(i,beforeText);
+                        runs.add(i, beforeText);
                     }
                 }
             }
         }
-runs.forEach(System.out::println);
+        runs.forEach(System.out::println);
     }
 }

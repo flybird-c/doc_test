@@ -40,23 +40,23 @@ public class main {
         map.put("SZYF",11);
         map.put("SZRQ",8);
 
-        ////表格参数
-        //List<List<String>> listList=new ArrayList<>();
-        //List<String> stringList=new ArrayList<>();
-        //stringList.add("1");
-        //stringList.add("2");
-        //stringList.add("3");
-        //stringList.add("4");
-        //stringList.add("5");
-        //listList.add(stringList);
-        //List<String> stringList1=new ArrayList<>();
-        //stringList1.add("第二行第一个");
-        //stringList1.add("第二个");
-        //stringList1.add("第三个");
-        //stringList1.add("第四个");
-        //stringList1.add("第五个");
-        //listList.add(stringList1);
-        //map.put("JSZJQD",listList);
+        //表格参数
+        List<List<String>> listList=new ArrayList<>();
+        List<String> stringList=new ArrayList<>();
+        stringList.add("1");
+        stringList.add("2");
+        stringList.add("3");
+        stringList.add("4");
+        stringList.add("5");
+        listList.add(stringList);
+        List<String> stringList1=new ArrayList<>();
+        stringList1.add("第二行第一个");
+        stringList1.add("第二个");
+        stringList1.add("第三个");
+        stringList1.add("第四个");
+        stringList1.add("第五个");
+        listList.add(stringList1);
+        map.put("JSZJQD",listList);
 
         //map.put("SZXS","");
         //map.put("XM","");
