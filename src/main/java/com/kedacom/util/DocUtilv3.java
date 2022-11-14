@@ -677,7 +677,7 @@ public class DocUtilv3 {
         List<String> idForRuns = runsMultilineCodeHandler(paragraph, runs);
         //文本勾选框编码处理
         getGXKParam(param, idForRuns);
-        //ITEM系列编码处理t
+        //ITEM系列编码处理
         getITEMParam(param,idForRuns);
         //文本编码处理
         textCodeHandler(param, runs, idForRuns);
@@ -687,6 +687,16 @@ public class DocUtilv3 {
         picCodeHandler(param, runs, paragraph, document);
     }
 
+    private static Map<String, Object> handItemCodes(Map<String,Object> param){
+        Object item = param.get("ITEM");
+        Map<String, Object> itemMap = new HashMap<>();
+        if (!ObjectUtils.isEmpty(item)) {
+            for (Map.Entry<String, Object> entry : param.entrySet()) {
+                itemMap.put(entry.getKey() + "-" + item , entry.getValue());
+            }
+        }
+        return itemMap;
+    }
     private static void getITEMParam(Map<String, Object> param, List<String> idForRuns) {
         Object item = param.get("ITEM");
         if (item !=null){
@@ -881,9 +891,8 @@ public class DocUtilv3 {
     private static void getGXKParam(Map<String, Object> param, List<String> idForRuns) {
         //查找每行编码是勾选框的,结合param参数,将选中的标记为true,未选中的标记为false
         Map<String, String> dollarParamForFlag = new HashMap<>();
-        List<String> removeList = new ArrayList<>();
-        String gxkReg = "[A-Z0-9]+_[\\u4e00-\\u9fa5]+";
-        String dollarGxkReg = "\\$\\{[A-Z0-9]+_[\\u4e00-\\u9fa5]+}";
+        String gxkReg = "[A-Z0-9]+_[\\u4e00-\\u9fa50-9]+";
+        String dollarGxkReg = "\\$\\{[A-Z0-9]+_[\\u4e00-\\u9fa50-9]+}";
         Pattern gxkCompile = Pattern.compile(gxkReg);
         Pattern dollarCompile = Pattern.compile(dollarGxkReg);
         for (String idForRun : idForRuns) {
@@ -897,34 +906,36 @@ public class DocUtilv3 {
                 if (gxkMatcher.find()) {
                     String gxkCode = gxkMatcher.group();
                     String[] split = gxkCode.split("_");
-                    log.info("获取编码:{}", split[0]);
-                    Object o = param.get(split[0]);
+                    String code = split[0];
+                    String suffix = split[1];
+                    log.info("获取编码:{}", code);
+                    Object o = param.get(code);
+                    boolean flag=false;
+                    //如果没有参数,则代表该勾选框没有被选中
                     if (o!=null){
                         String values = o.toString();
                         log.info("param编码值为:{}", values);
+                        //这里的编码可能是XXX,XXX,XXX的多选框格式
                         String[] valueList = values.split(",");
-                        boolean flag = false;
                         for (String value : valueList) {
-                            if (Objects.equals(split[1], value)) {
-                                flag = true;
+                            if (Objects.equals(suffix, value)) {
+                                flag=true;
                                 break;
                             }
                         }
-                        //如果值相等,则增加true标记,不相等增加false标记
-                        if (flag) {
-                            log.info("勾选框值为true");
-                            dollarParamForFlag.put(gxkCode, GXK_FLAG_TRUE);
-                        } else {
-                            log.info("勾选框值为false");
-                            dollarParamForFlag.put(gxkCode, GXK_FLAG_FALSE);
-                        }
-                        //原本param的参数移除替换
-                        removeList.add(split[0]);
+                    }else {
+                        log.info("参数为空,勾选框值为false");
+                    }
+                    if (flag){
+                        log.info("勾选框值为true");
+                        dollarParamForFlag.put(gxkCode, GXK_FLAG_TRUE);
+                    }else {
+                        log.info("勾选框值为false");
+                        dollarParamForFlag.put(gxkCode, GXK_FLAG_FALSE);
                     }
                 }
             }
         }
-        removeList.forEach(param::remove);
         param.putAll(dollarParamForFlag);
     }
 

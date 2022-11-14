@@ -32,30 +32,32 @@ public class main {
         //System.out.println(codeList_v3);
 
         Map<String,Object> map=new HashMap<>();
-        //map.put("JDYT2","刑事,行政");
-        //map.put("JDLX","");
-        //map.put("CCZP","C:\\Users\\lzp\\Pictures\\pm.jpg");
-        //map.put("ITEM",2);
-        //map.put("SZNF",2022);
-        //map.put("SZYF",11);
-        //map.put("SZRQ",8);
-        List<List<String>> listList=new ArrayList<>();
-        List<String> stringList=new ArrayList<>();
-        stringList.add("1");
-        stringList.add("2");
-        stringList.add("3");
-        stringList.add("4");
-        stringList.add("5");
-        listList.add(stringList);
-        List<String> stringList1=new ArrayList<>();
-        stringList1.add("第二行第一个");
-        stringList1.add("第二个");
-        stringList1.add("第三个");
-        stringList1.add("第四个");
-        stringList1.add("第五个");
-        listList.add(stringList1);
-        map.put("JSZJQD",listList);
-        //
+        map.put("JDYT2","刑事,行政");
+        map.put("JDLX","");
+        map.put("CCZP","C:\\Users\\lzp\\Pictures\\pm.jpg");
+        map.put("ITEM",2);
+        map.put("SZNF",2022);
+        map.put("SZYF",11);
+        map.put("SZRQ",8);
+
+        ////表格参数
+        //List<List<String>> listList=new ArrayList<>();
+        //List<String> stringList=new ArrayList<>();
+        //stringList.add("1");
+        //stringList.add("2");
+        //stringList.add("3");
+        //stringList.add("4");
+        //stringList.add("5");
+        //listList.add(stringList);
+        //List<String> stringList1=new ArrayList<>();
+        //stringList1.add("第二行第一个");
+        //stringList1.add("第二个");
+        //stringList1.add("第三个");
+        //stringList1.add("第四个");
+        //stringList1.add("第五个");
+        //listList.add(stringList1);
+        //map.put("JSZJQD",listList);
+
         //map.put("SZXS","");
         //map.put("XM","");
         //map.put("JSXM","");
