@@ -26,15 +26,15 @@ public class test {
     public static void main(String[] args) {
         String path = "C:\\Users\\lzp\\Desktop\\doc测试\\纯表格测试.docx";
         Map<String, Object> param = new HashMap<>();
-        List<List<String>> listList = new ArrayList<>();
-        List<String> stringList = new ArrayList<>();
+        List<List<Object>> listList = new ArrayList<>();
+        List<Object> stringList = new ArrayList<>();
         stringList.add("1");
         stringList.add("2");
         stringList.add("3");
         stringList.add("4");
         stringList.add("5");
         listList.add(stringList);
-        List<String> stringList1 = new ArrayList<>();
+        List<Object> stringList1 = new ArrayList<>();
         stringList1.add("第二行第一个");
         listList.add(stringList1);
         param.put("JSZJQD", listList);
@@ -46,7 +46,7 @@ public class test {
             XWPFTable xwpfTable = tables.get(0);
             List<XWPFTableRow> rows = xwpfTable.getRows();
             if (listList.size() > 1 && rows.size() >= 1) {
-                insertRowAndCopyStyle(rows.get(0), listList.size() - rows.size(), 2, tables.get(0));
+                insertRowAndCopyStyle(rows.get(0), 1, 1,listList, tables.get(0));
             }
             for (int i = 0; i < rows.size(); i++) {
                 XWPFTableRow xwpfTableRow = rows.get(i);
@@ -94,49 +94,46 @@ public class test {
     }
 
     /** 插入行,复制样式
-     * @param sourceRow 复制样式的行
-     * @param i 循环创建的次数
-     * @param insertTablePos 插入表格的位置
-     * @param table 需要插入的表格
+     * @param sourceRow 复制样式的行,如果为空则为默认格式
+     * @param loopCount 循环创建的次数,如果为空则默认为1
+     * @param insertTablePos 插入表格的位置,如果为空则从表格最后一行添加
+     * @param table 需要插入的表格,如果为空则抛出异常
      */
-    private static void insertRowAndCopyStyle(XWPFTableRow sourceRow, int i, int insertTablePos, XWPFTable table) {
+    private static void insertRowAndCopyStyle(XWPFTableRow sourceRow,
+                                              int loopCount,
+                                              int insertTablePos,
+                                              List<List<Object>> insertData,
+                                              XWPFTable table) {
+        //todo 需要参数,源格式行,填充开始行,结束行(表格大小,数据填充范围),数据,表格本身
         //行样式
         CTTrPr rowPr = sourceRow.getCtRow().getTrPr();
-        int cellCount=-1;
-       //单元格样式
-        CTTcPr cellPr = null;
+        //单元格样式
+        List<CTTcPr> cellCprList =new ArrayList<>();
         //段落样式
-        CTPPr pPr = null;
+        List<CTPPr> phPprList=new ArrayList<>();
+        //字体
+        List<String> runsFontFamily=new ArrayList<>();
+        CTTcPr cellPr = null;
+
         //字体大小
-        int fontSize = -1;
-        //字体样式
-        String fontFamily = null;
+        Integer fontSize = null;
+
+        //获取格式,每个单元格的格式和单元格对应的第一个段落的格式,以及第一个run的字体
         List<XWPFTableCell> tableCells = sourceRow.getTableCells();
-        if (tableCells.size() >= 1) {
-            cellCount=tableCells.size();
-            XWPFTableCell xwpfTableCell = tableCells.get(0);
-            cellPr = xwpfTableCell.getCTTc().getTcPr();
-            List<XWPFParagraph> paragraphs = xwpfTableCell.getParagraphs();
-            if (paragraphs.size() >= 1) {
-                XWPFParagraph xwpfParagraph = paragraphs.get(0);
-                pPr = xwpfParagraph.getCTP().getPPr();
-                List<XWPFRun> runs = xwpfParagraph.getRuns();
-                if (runs.size() >= 1) {
-                    XWPFRun xwpfRun = runs.get(0);
-                    fontSize = xwpfRun.getFontSize();
-                    fontFamily = xwpfRun.getFontFamily();
+        for (XWPFTableCell tableCell : tableCells) {
+           cellCprList.add(tableCell.getCTTc().getTcPr());
+            List<XWPFParagraph> paragraphs = tableCell.getParagraphs();
+            if (paragraphs.size()>0){
+                phPprList.add(paragraphs.get(0).getCTP().getPPr());
+                List<XWPFRun> xwpfRuns = paragraphs.get(0).getRuns();
+                if (xwpfRuns.size()>0) {
+                    runsFontFamily.add(xwpfRuns.get(0).getFontFamily());
                 }
             }
         }
-        for (int j = 0; j < i; j++) {
-            XWPFTableRow targetRow = table.insertNewTableRow(insertTablePos);
-            targetRow.getCtRow().setTrPr(sourceRow.getCtRow().getTrPr());
-            for (int k = 0; k < cellCount; k++) {
-                XWPFTableCell cell = targetRow.createCell();
-                cell.getCTTc().setTcPr(cellPr);
-                XWPFParagraph xwpfParagraph = cell.getParagraphs().get(0);
-                xwpfParagraph.getCTP().setPPr(pPr);
-            }
+        //开始复制
+        //判断数据量是否大于表格内容,如果大于表格则需要额外创建空行
+        for (int i = insertData.size() - 1; i >= 0; i--) {
         }
     }
 }
