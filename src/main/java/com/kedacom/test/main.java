@@ -43,7 +43,7 @@ public class main {
         //表格参数
         //表格参数
         List<List<Object>> listList=new ArrayList<>();
-        listList.add(Arrays.asList(1,2,3,4,5));
+        listList.add(Arrays.asList(1,2,3,4,5,6));
         listList.add(Arrays.asList(21,2,3,4,5));
         listList.add(Arrays.asList(31,2,3,4,5));
         listList.add(Arrays.asList(41,2,3,4,5));
@@ -52,13 +52,13 @@ public class main {
         listList.add(Arrays.asList(71,2,3,4,5));
         listList.add(Arrays.asList(81,2,3,4,5));
         listList.add(Arrays.asList(91,2,3,4,5));
-        listList.add(Arrays.asList(101,2,3,4,5));
-        listList.add(Arrays.asList(111,2,3,4,5));
-        listList.add(Arrays.asList(121,2,3,4,5));
+        listList.add(Arrays.asList(101,2,3.14f,4,5));
+        listList.add(Arrays.asList(111,2,3,4.12,5));
+        listList.add(Arrays.asList(121,2,3,4,5L));
         listList.add(Arrays.asList(131,2,3,4,5));
-        listList.add(Arrays.asList(141,2,3,4,5));
+        listList.add(Arrays.asList(141,2,"这是字符串",4,5));
         listList.add(Arrays.asList(151,2,3,4,5));
-        listList.add(Arrays.asList(161,2,3,4,5));
+        listList.add(Arrays.asList(161,2,3,4,null));
         map.put("JSZJQD",listList);
 
         //map.put("SZXS","");
