@@ -45,96 +45,136 @@ public class test {
             List<XWPFTable> tables = document.getTables();
             XWPFTable xwpfTable = tables.get(0);
             List<XWPFTableRow> rows = xwpfTable.getRows();
-            if (listList.size() > 1 && rows.size() >= 1) {
-                insertRowAndCopyStyle(rows.get(0), 1, 1,listList, tables.get(0));
-            }
-            for (int i = 0; i < rows.size(); i++) {
-                XWPFTableRow xwpfTableRow = rows.get(i);
-                List<XWPFTableCell> tableCells = xwpfTableRow.getTableCells();
-                for (int j = 0; j < tableCells.size(); j++) {
-
-                }
-            }
-            //if (tables.size()==0){
-            //    XWPFTable table = document.createTable();
-            //    table.setWidth(8973);
-            //    //table.setCellMargins(0,0,0,0);
-            //    //table.setStyleID();
-            //    //table.setInsideVBorder(, , , );
-            //
-            //    //表格居中
-            //    CTJc jc = table.getCTTbl().getTblPr().getJc();
-            //    if (jc==null){
-            //        jc = table.getCTTbl().getTblPr().addNewJc();
-            //    }
-            //    jc.setVal(STJc.CENTER);
-            //    //刚刚创建的表格类默认会有一行row,row内默认会有一个单元格cell
-            //    List<XWPFTableRow> rows = table.getRows();
-            //    if (rows.size()!=0){
-            //        XWPFTableRow xwpfTableRow = rows.get(0);
-            //        xwpfTableRow.setHeight(900);
-            //        for (int i = 0; i < 5; i++) {
-            //            XWPFTableCell cell = xwpfTableRow.getCell(i);
-            //            if (cell==null){
-            //                 cell = xwpfTableRow.createCell();
-            //            }
-            //            cell.setVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
-            //            //cell可以直接设置文本,cell默认带一个<w:p>标签;在run里创建相当于会再创建一个<w:p>标签,相当于脱裤子放屁了
-            //            //XWPFParagraph xwpfParagraph = cell.addParagraph();
-            //            //XWPFRun run = xwpfParagraph.createRun();
-            //            //run.setText("文本"+i+"runs");
-            //            cell.setText("文本"+i+"cell");
-            //        }
-            //    }
-            //}
+            insertRowAndCopyStyle(rows.get(0), 1, 2, listList, tables.get(0), null, null);
             document.write(fos);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    /** 插入行,复制样式
-     * @param sourceRow 复制样式的行,如果为空则为默认格式
-     * @param loopCount 循环创建的次数,如果为空则默认为1
-     * @param insertTablePos 插入表格的位置,如果为空则从表格最后一行添加
-     * @param table 需要插入的表格,如果为空则抛出异常
+    /**
+     * 循环插入表格数据,行不够的时候会创建行,样式会复制sourceRow的样式
+     *
+     * @param sourceRow     复制样式的行,如果为空则为默认格式
+     * @param startRowIndex 循环创建的次数,如果为空则默认为1
+     * @param endRowIndex   插入表格的位置,如果为空则从表格最后一行添加
+     * @param fontFamily    字体
+     * @param tableList     要插入的表格数据
+     * @param fontSize      字体大小
+     * @param table         需要插入的表格,如果为空则抛出异常
      */
     private static void insertRowAndCopyStyle(XWPFTableRow sourceRow,
-                                              int loopCount,
-                                              int insertTablePos,
-                                              List<List<Object>> insertData,
-                                              XWPFTable table) {
-        //todo 需要参数,源格式行,填充开始行,结束行(表格大小,数据填充范围),数据,表格本身
+                                              int startRowIndex,
+                                              int endRowIndex,
+                                              List<List<Object>> tableList,
+                                              XWPFTable table,
+                                              String fontFamily,
+                                              Integer fontSize) {
         //行样式
         CTTrPr rowPr = sourceRow.getCtRow().getTrPr();
-        //单元格样式
-        List<CTTcPr> cellCprList =new ArrayList<>();
         //段落样式
-        List<CTPPr> phPprList=new ArrayList<>();
+        CTPPr phPpr = null;
+        //单元格样式
+        List<CTTcPr> cellCprList = new ArrayList<>();
         //字体
-        List<String> runsFontFamily=new ArrayList<>();
-        CTTcPr cellPr = null;
-
+        List<String> runsFontFamily = new ArrayList<>();
         //字体大小
-        Integer fontSize = null;
-
-        //获取格式,每个单元格的格式和单元格对应的第一个段落的格式,以及第一个run的字体
-        List<XWPFTableCell> tableCells = sourceRow.getTableCells();
-        for (XWPFTableCell tableCell : tableCells) {
-           cellCprList.add(tableCell.getCTTc().getTcPr());
+        List<Integer> runsFontSize = new ArrayList<>();
+        //获取格式
+        List<XWPFTableCell> sourceRowTableCells = sourceRow.getTableCells();
+        for (XWPFTableCell tableCell : sourceRowTableCells) {
+            cellCprList.add(tableCell.getCTTc().getTcPr());
             List<XWPFParagraph> paragraphs = tableCell.getParagraphs();
-            if (paragraphs.size()>0){
-                phPprList.add(paragraphs.get(0).getCTP().getPPr());
+            if (paragraphs.size() > 0) {
+                phPpr = paragraphs.get(0).getCTP().getPPr();
                 List<XWPFRun> xwpfRuns = paragraphs.get(0).getRuns();
-                if (xwpfRuns.size()>0) {
+                if (xwpfRuns.size() > 0) {
                     runsFontFamily.add(xwpfRuns.get(0).getFontFamily());
+                    runsFontSize.add(xwpfRuns.get(0).getFontSize());
                 }
             }
         }
-        //开始复制
         //判断数据量是否大于表格内容,如果大于表格则需要额外创建空行
-        for (int i = insertData.size() - 1; i >= 0; i--) {
+        int tableRowSize = endRowIndex - startRowIndex;
+        for (int rowIndex = 0; rowIndex < tableList.size(); rowIndex++) {
+            if (rowIndex >= tableRowSize) {
+                XWPFTableRow xwpfTableRow = table.insertNewTableRow(rowIndex + startRowIndex);
+                xwpfTableRow.getCtRow().setTrPr(rowPr);
+                for (int j = 0; j < sourceRowTableCells.size(); j++) {
+                    Integer rowFontSize = fontSize;
+                    String rowFontFamily = fontFamily;
+                    CTTcPr ctTcPr = null;
+                    if (fontSize == null && runsFontSize.size() > j) {
+                        rowFontSize = runsFontSize.get(j);
+                    }
+                    if (fontFamily == null && runsFontFamily.size() > j) {
+                        rowFontFamily = runsFontFamily.get(j);
+                    }
+                    if (cellCprList.size() > j) {
+                        ctTcPr = cellCprList.get(j);
+                    }
+                    createNewCell(xwpfTableRow, ctTcPr, phPpr, rowFontFamily, rowFontSize);
+                }
+            }
+            XWPFTableRow row = table.getRow(rowIndex + startRowIndex);
+            List<XWPFTableCell> targetCell = row.getTableCells();
+            for (int targetCellIndex = 0; targetCellIndex < targetCell.size(); targetCellIndex++) {
+                XWPFTableCell cell = targetCell.get(targetCellIndex);
+                setCellPhRunsStyleAndText(fontFamily, fontSize, runsFontFamily, runsFontSize, tableList.get(rowIndex), targetCellIndex, cell);
+            }
         }
+    }
+
+    private static void setCellPhRunsStyleAndText(String fontFamily,
+                                                  Integer fontSize,
+                                                  List<String> runsFontFamily,
+                                                  List<Integer> runsFontSize,
+                                                  List<Object> rowData,
+                                                  int targetCellIndex,
+                                                  XWPFTableCell cell) {
+        XWPFParagraph paragraph;
+        if (cell.getParagraphs().size() > 0) {
+            paragraph = cell.getParagraphs().get(0);
+        } else {
+            paragraph = cell.addParagraph();
+        }
+
+        List<XWPFRun> runs = paragraph.getRuns();
+        XWPFRun targetRun;
+        if (runs.size() == 0) {
+            targetRun = paragraph.createRun();
+        } else {
+            targetRun = runs.get(0);
+        }
+
+        if (rowData.size() > targetCellIndex) {
+            targetRun.setText(rowData.get(targetCellIndex) != null ? rowData.get(targetCellIndex).toString() : "");
+        } else {
+            targetRun.setText("");
+        }
+        //设置字体大小,传参优先
+        if (fontSize != null) {
+            targetRun.setFontSize(fontSize);
+        } else if (runsFontSize.size() > targetCellIndex && runsFontSize.get(targetCellIndex) != null) {
+            targetRun.setFontSize(runsFontSize.get(targetCellIndex));
+        }
+        //设置字体,传参优先
+        if (fontFamily != null) {
+            targetRun.setFontFamily(fontFamily);
+        } else if (runsFontFamily.size() > targetCellIndex && runsFontFamily.get(targetCellIndex) != null) {
+            targetRun.setFontFamily(runsFontFamily.get(targetCellIndex));
+        }
+    }
+
+    private static void createNewCell(XWPFTableRow xwpfTableRow, CTTcPr cellPr, CTPPr phPr, String fontFamily, Integer fontSize) {
+        XWPFTableCell cell = xwpfTableRow.createCell();
+        cell.getCTTc().setTcPr(cellPr);
+
+        XWPFParagraph xwpfParagraph = cell.getParagraphs().get(0);
+        xwpfParagraph.getCTP().setPPr(phPr);
+        XWPFRun run = xwpfParagraph.createRun();
+        run.setFontFamily(fontFamily);
+        run.setFontSize(fontSize);
     }
 }
 

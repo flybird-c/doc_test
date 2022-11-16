@@ -9,7 +9,10 @@ import org.apache.poi.xwpf.converter.xhtml.XHTMLConverter;
 import org.apache.poi.xwpf.converter.xhtml.XHTMLOptions;
 import org.apache.poi.xwpf.usermodel.*;
 import org.openxmlformats.schemas.drawingml.x2006.picture.CTPicture;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTcPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTrPr;
 import org.springframework.http.MediaType;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -480,10 +483,10 @@ public class DocUtilv3 {
         if (obj == null) {
             return allList;
         }
-        if (obj instanceof ArrayList<?>) {
-            List<Object> obj1 = (List)obj;
+        if (obj instanceof List) {
+            List obj1 = (List)obj;
             for (Object o : obj1) {
-                if (o instanceof ArrayList<?>){
+                if (o instanceof List){
                     return (List)obj;
                 }
                 handleTableDates(allList,o);
@@ -517,13 +520,145 @@ public class DocUtilv3 {
     private static void insertTableByCode(List<List<Object>> lists , String string , XWPFTable table){
         if (!CollectionUtils.isEmpty(lists)){
             if(string.equals("SSCWJCJL")){
-                insertTable(table, lists, 5 , 11 , 1,1);
+                //todo
+                //处理登记表中的字体
+                //insertTable(table, lists, 5 , 11 , 1,1);
+                insertRowAndCopyStyle(table.getRows().get(0), 11, 5, lists, table, "仿宋", 12);
             } else  if(string.equals("YHDJL")){
-                insertTable(table, lists, 11 , 2 , 1,1);
+                //todo
+                //insertTable(table, lists, 11 , 2 , 1,1);
+                insertRowAndCopyStyle(table.getRows().get(0), 11, 5, lists, table, "仿宋", 12);
             }else {
-                insertTable(table, lists, table.getNumberOfRows() - 2 , 2 , 1,0);
+                // 处理清单中的字体
+                //insertTable(table, lists, table.getNumberOfRows() - 2 , 2 , 1,0);
+                insertRowAndCopyStyle(table.getRows().get(0), 1, 15, lists, table, "仿宋_GB2312", 14);
             }
         }
+    }
+
+    /**
+     * 循环插入表格数据,行不够的时候会创建行,样式会复制sourceRow的样式
+     *
+     * @param sourceRow     复制样式的行,如果为空则为默认格式
+     * @param startRowIndex 循环创建的次数,如果为空则默认为1
+     * @param endRowIndex   插入表格的位置,如果为空则从表格最后一行添加
+     * @param fontFamily    字体
+     * @param tableList     要插入的表格数据
+     * @param fontSize      字体大小
+     * @param table         需要插入的表格,如果为空则抛出异常
+     */
+    private static void insertRowAndCopyStyle(XWPFTableRow sourceRow,
+                                              int startRowIndex,
+                                              int endRowIndex,
+                                              List<List<Object>> tableList,
+                                              XWPFTable table,
+                                              String fontFamily,
+                                              Integer fontSize) {
+        //行样式
+        CTTrPr rowPr = sourceRow.getCtRow().getTrPr();
+        //段落样式
+        CTPPr phPpr = null;
+        //单元格样式
+        List<CTTcPr> cellCprList = new ArrayList<>();
+        //字体
+        List<String> runsFontFamily = new ArrayList<>();
+        //字体大小
+        List<Integer> runsFontSize = new ArrayList<>();
+        //获取格式
+        List<XWPFTableCell> sourceRowTableCells = sourceRow.getTableCells();
+        for (XWPFTableCell tableCell : sourceRowTableCells) {
+            cellCprList.add(tableCell.getCTTc().getTcPr());
+            List<XWPFParagraph> paragraphs = tableCell.getParagraphs();
+            if (paragraphs.size() > 0) {
+                phPpr = paragraphs.get(0).getCTP().getPPr();
+                List<XWPFRun> xwpfRuns = paragraphs.get(0).getRuns();
+                if (xwpfRuns.size() > 0) {
+                    runsFontFamily.add(xwpfRuns.get(0).getFontFamily());
+                    runsFontSize.add(xwpfRuns.get(0).getFontSize());
+                }
+            }
+        }
+        //判断数据量是否大于表格内容,如果大于表格则需要额外创建空行
+        int tableRowSize = endRowIndex - startRowIndex;
+        for (int rowIndex = 0; rowIndex < tableList.size(); rowIndex++) {
+            if (rowIndex >= tableRowSize) {
+                XWPFTableRow xwpfTableRow = table.insertNewTableRow(rowIndex + startRowIndex);
+                xwpfTableRow.getCtRow().setTrPr(rowPr);
+                for (int j = 0; j < sourceRowTableCells.size(); j++) {
+                    Integer rowFontSize = fontSize;
+                    String rowFontFamily = fontFamily;
+                    CTTcPr ctTcPr = null;
+                    if (fontSize == null && runsFontSize.size() > j) {
+                        rowFontSize = runsFontSize.get(j);
+                    }
+                    if (fontFamily == null && runsFontFamily.size() > j) {
+                        rowFontFamily = runsFontFamily.get(j);
+                    }
+                    if (cellCprList.size() > j) {
+                        ctTcPr = cellCprList.get(j);
+                    }
+                    createNewCell(xwpfTableRow, ctTcPr, phPpr, rowFontFamily, rowFontSize);
+                }
+            }
+            XWPFTableRow row = table.getRow(rowIndex + startRowIndex);
+            List<XWPFTableCell> targetCell = row.getTableCells();
+            for (int targetCellIndex = 0; targetCellIndex < targetCell.size(); targetCellIndex++) {
+                XWPFTableCell cell = targetCell.get(targetCellIndex);
+                setCellPhRunsStyleAndText(fontFamily, fontSize, runsFontFamily, runsFontSize, tableList.get(rowIndex), targetCellIndex, cell);
+            }
+        }
+    }
+
+    private static void setCellPhRunsStyleAndText(String fontFamily,
+                                                  Integer fontSize,
+                                                  List<String> runsFontFamily,
+                                                  List<Integer> runsFontSize,
+                                                  List<Object> rowData,
+                                                  int targetCellIndex,
+                                                  XWPFTableCell cell) {
+        XWPFParagraph paragraph;
+        if (cell.getParagraphs().size() > 0) {
+            paragraph = cell.getParagraphs().get(0);
+        } else {
+            paragraph = cell.addParagraph();
+        }
+
+        List<XWPFRun> runs = paragraph.getRuns();
+        XWPFRun targetRun;
+        if (runs.size() == 0) {
+            targetRun = paragraph.createRun();
+        } else {
+            targetRun = runs.get(0);
+        }
+
+        if (rowData.size() > targetCellIndex) {
+            targetRun.setText(rowData.get(targetCellIndex) != null ? rowData.get(targetCellIndex).toString() : "");
+        } else {
+            targetRun.setText("");
+        }
+        //设置字体大小,传参优先
+        if (fontSize != null) {
+            targetRun.setFontSize(fontSize);
+        } else if (runsFontSize.size() > targetCellIndex && runsFontSize.get(targetCellIndex) != null) {
+            targetRun.setFontSize(runsFontSize.get(targetCellIndex));
+        }
+        //设置字体,传参优先
+        if (fontFamily != null) {
+            targetRun.setFontFamily(fontFamily);
+        } else if (runsFontFamily.size() > targetCellIndex && runsFontFamily.get(targetCellIndex) != null) {
+            targetRun.setFontFamily(runsFontFamily.get(targetCellIndex));
+        }
+    }
+
+    private static void createNewCell(XWPFTableRow xwpfTableRow, CTTcPr cellPr, CTPPr phPr, String fontFamily, Integer fontSize) {
+        XWPFTableCell cell = xwpfTableRow.createCell();
+        cell.getCTTc().setTcPr(cellPr);
+
+        XWPFParagraph xwpfParagraph = cell.getParagraphs().get(0);
+        xwpfParagraph.getCTP().setPPr(phPr);
+        XWPFRun run = xwpfParagraph.createRun();
+        run.setFontFamily(fontFamily);
+        run.setFontSize(fontSize);
     }
     private static void insertTable(XWPFTable table,List<List<Object>> daList , Integer nowTableSize ,
                                     Integer insertTablePos , Integer insertDatePos , Integer flag){

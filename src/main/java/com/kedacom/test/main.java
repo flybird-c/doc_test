@@ -7,10 +7,7 @@ import lombok.SneakyThrows;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author : lzp
@@ -21,7 +18,7 @@ import java.util.Map;
 public class main {
     @SneakyThrows
     public static void main(String[] args) {
-        String path="C:\\Users\\lzp\\Desktop\\doc测试\\所有元素测试.docx";
+        String path="C:\\Users\\lzp\\Desktop\\doc测试\\接受证据清单.docx";
         //List<String> codeList=new ArrayList<>();
         //codeList.add("JSZJQD");
         //List codeList_v1 = DocUtilv1.getDocCodes(codeList, path);
@@ -41,21 +38,27 @@ public class main {
         map.put("SZRQ",8);
 
         //表格参数
-        List<List<String>> listList=new ArrayList<>();
-        List<String> stringList=new ArrayList<>();
-        stringList.add("1");
-        stringList.add("2");
-        stringList.add("3");
-        stringList.add("4");
-        stringList.add("5");
-        listList.add(stringList);
-        List<String> stringList1=new ArrayList<>();
-        stringList1.add("第二行第一个");
-        stringList1.add("第二个");
-        stringList1.add("第三个");
-        stringList1.add("第四个");
-        stringList1.add("第五个");
-        listList.add(stringList1);
+        //表格参数
+        //表格参数
+        //表格参数
+        //表格参数
+        List<List<Object>> listList=new ArrayList<>();
+        listList.add(Arrays.asList(1,2,3,4,5));
+        listList.add(Arrays.asList(21,2,3,4,5));
+        listList.add(Arrays.asList(31,2,3,4,5));
+        listList.add(Arrays.asList(41,2,3,4,5));
+        listList.add(Arrays.asList(51,2,3,4,5));
+        listList.add(Arrays.asList(61,2,3,4,5));
+        listList.add(Arrays.asList(71,2,3,4,5));
+        listList.add(Arrays.asList(81,2,3,4,5));
+        listList.add(Arrays.asList(91,2,3,4,5));
+        listList.add(Arrays.asList(101,2,3,4,5));
+        listList.add(Arrays.asList(111,2,3,4,5));
+        listList.add(Arrays.asList(121,2,3,4,5));
+        listList.add(Arrays.asList(131,2,3,4,5));
+        listList.add(Arrays.asList(141,2,3,4,5));
+        listList.add(Arrays.asList(151,2,3,4,5));
+        listList.add(Arrays.asList(161,2,3,4,5));
         map.put("JSZJQD",listList);
 
         //map.put("SZXS","");
