@@ -520,41 +520,41 @@ public class DocUtilv3 {
     private static void insertTableByCode(List<List<Object>> lists , String string , XWPFTable table){
         if (!CollectionUtils.isEmpty(lists)){
             if(string.equals("SSCWJCJL")){
-                //todo
-                //处理登记表中的字体
+                //处理登记表中的随身财物检查记录
                 //insertTable(table, lists, 5 , 11 , 1,1);
-                insertRowAndCopyStyle(table.getRows().get(10), 10, 15, lists, table, "仿宋", 12);
-            } else  if(string.equals("YHDJL")){
-                //todo
+                insertRowAndCopyStyle(10, 15, lists, table, "仿宋", 12);
+            } else  if(string.equals("HDJL")){
+                //处理登记表中的活动记录
                 //insertTable(table, lists, 11 , 2 , 1,1);
-                insertRowAndCopyStyle(table.getRows().get(0), 11, 5, lists, table, "仿宋", 12);
+                insertRowAndCopyStyle(1, 11, lists, table, "仿宋", 12);
             }else {
                 // 处理清单中的字体
                 //insertTable(table, lists, table.getNumberOfRows() - 2 , 2 , 1,0);
                 //startRowIndex是表格下标,下标从0开始,这里的1是指起始行从第二行包括第二行,容量为14,1+14=15,endRowIndex为15,不包括下标为15的行
-                insertRowAndCopyStyle(table.getRows().get(1), 1, 15, lists, table, "仿宋_GB2312", 14);
+                insertRowAndCopyStyle(1, 15, lists, table, "仿宋_GB2312", 14);
             }
         }
     }
 
     /**
-     * 循环插入表格数据,行不够的时候会创建行,样式会复制sourceRow的样式
-     *
-     * @param sourceRow     复制样式的行,如果为空则为默认格式
-     * @param startRowIndex 循环创建的次数,如果为空则默认为1
-     * @param endRowIndex   插入表格的位置,如果为空则从表格最后一行添加
-     * @param fontFamily    字体
+     * 循环插入表格数据
+     *  @param startRowIndex 表格填充的起始下标位置,包括该下标
+     * @param endRowIndex   表格的结束行,不包括该下标
      * @param tableList     要插入的表格数据
-     * @param fontSize      字体大小
      * @param table         需要插入的表格,如果为空则抛出异常
+     * @param fontFamily    字体
+     * @param fontSize      字体大小
      */
-    private static void insertRowAndCopyStyle(XWPFTableRow sourceRow,
-                                              int startRowIndex,
+    private static void insertRowAndCopyStyle(int startRowIndex,
                                               int endRowIndex,
                                               List<List<Object>> tableList,
                                               XWPFTable table,
                                               String fontFamily,
                                               Integer fontSize) {
+        XWPFTableRow sourceRow = table.getRow(startRowIndex);
+        if (sourceRow==null){
+            throw new IllegalArgumentException("startRowIndex参数错误,获取不到表格行");
+        }
         //行样式
         CTTrPr rowPr = sourceRow.getCtRow().getTrPr();
         //段落样式
