@@ -523,7 +523,7 @@ public class DocUtilv3 {
                 //todo
                 //处理登记表中的字体
                 //insertTable(table, lists, 5 , 11 , 1,1);
-                insertRowAndCopyStyle(table.getRows().get(0), 11, 5, lists, table, "仿宋", 12);
+                insertRowAndCopyStyle(table.getRows().get(10), 10, 15, lists, table, "仿宋", 12);
             } else  if(string.equals("YHDJL")){
                 //todo
                 //insertTable(table, lists, 11 , 2 , 1,1);
@@ -531,7 +531,8 @@ public class DocUtilv3 {
             }else {
                 // 处理清单中的字体
                 //insertTable(table, lists, table.getNumberOfRows() - 2 , 2 , 1,0);
-                insertRowAndCopyStyle(table.getRows().get(0), 1, 15, lists, table, "仿宋_GB2312", 14);
+                //startRowIndex是表格下标,下标从0开始,这里的1是指起始行从第二行包括第二行,容量为14,1+14=15,endRowIndex为15,不包括下标为15的行
+                insertRowAndCopyStyle(table.getRows().get(1), 1, 15, lists, table, "仿宋_GB2312", 14);
             }
         }
     }
