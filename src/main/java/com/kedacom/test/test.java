@@ -1,7 +1,9 @@
 package com.kedacom.test;
 
+import com.kedacom.constant.KeyConstant;
 import com.kedacom.util.CustomXWPFDocument;
 import com.kedacom.util.DocUtilv2;
+import lombok.SneakyThrows;
 import org.apache.poi.xwpf.usermodel.*;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTcPr;
@@ -11,6 +13,8 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -248,5 +252,20 @@ class testLinkArrayList {
             }
         }
         runs.forEach(System.out::println);
+    }
+}
+class TestConst{
+    @SneakyThrows
+    public static void main(String[] args) {
+        Field[] declaredFields = KeyConstant.class.getDeclaredFields();
+        for (Field declaredField : declaredFields) {
+            if (Modifier.isStatic(declaredField.getModifiers())) {
+                declaredField.setAccessible(true);
+                Object o = declaredField.get(KeyConstant.class);
+                System.out.println(o);
+
+            }
+        }
+
     }
 }

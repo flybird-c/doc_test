@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  * @author : lzp
  * @version 1.0
  * @date : 2022/10/31 15:21
- * @apiNote : TODO
+ * @apiNote : docUtils第三版
  */
 @Slf4j
 public class DocUtilv3 {
@@ -960,7 +960,7 @@ public class DocUtilv3 {
             while (matcher.find()) {
                 for (Map.Entry<String, Object> entry : param.entrySet()) {
                     if (Objects.equals(entry.getKey(), "ITEM")){
-                    newText=newText.replace("${"+entry.getKey()+"}","");
+                        newText=newText.replace("${"+entry.getKey()+"}","");
                     }else {
                         newText = newText.replace("${"+entry.getKey()+"}", entry.getValue().toString());
                     }
@@ -969,6 +969,11 @@ public class DocUtilv3 {
             //如果文本有编码被替换,则更新run
             if (!text.equals(newText)) {
                 XWPFRun xwpfRun = runs.get(i);
+                //todo 更新run格式
+                //xwpfRun.setFontFamily();
+                //xwpfRun.setFontSize();
+                //xwpfRun.setUnderline();
+                //xwpfRun.setBold();
                 xwpfRun.setText(newText, 0);
                 idForRuns.set(i, newText);
             }
