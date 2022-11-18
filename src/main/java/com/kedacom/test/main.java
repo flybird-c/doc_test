@@ -18,7 +18,7 @@ import java.util.*;
 public class main {
     @SneakyThrows
     public static void main(String[] args) {
-        String path="C:\\Users\\lzp\\Desktop\\doc测试\\办案区情况登记表 表格测试.docx";
+        String path="C:\\Users\\lzp\\Desktop\\doc测试\\南方医科大学补充补正协议.docx";
         //List<String> codeList=new ArrayList<>();
         //codeList.add("JSZJQD");
         //List codeList_v1 = DocUtilv1.getDocCodes(codeList, path);
@@ -30,6 +30,7 @@ public class main {
 
         Map<String,Object> map=new HashMap<>();
         map.put("JDYT2","刑事,行政");
+        map.put("BQYY","委托方要求更改/补充委托鉴定事项");
         map.put("JDLX","");
         map.put("CCZP","C:\\Users\\lzp\\Pictures\\pm.jpg");
         map.put("ITEM",2);

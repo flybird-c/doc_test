@@ -1032,8 +1032,8 @@ public class DocUtilv3 {
     private static void getGXKParam(Map<String, Object> param, List<String> idForRuns) {
         //查找每行编码是勾选框的,结合param参数,将选中的标记为true,未选中的标记为false
         Map<String, String> dollarParamForFlag = new HashMap<>();
-        String gxkReg = "[A-Z0-9]+_[\\u4e00-\\u9fa50-9]+";
-        String dollarGxkReg = "\\$\\{[A-Z0-9]+_[\\u4e00-\\u9fa50-9]+}";
+        String gxkReg = "[A-Z0-9]+_[^}-]+";
+        String dollarGxkReg = "\\$\\{[A-Z0-9]+_[^}-]+}";
         Pattern gxkCompile = Pattern.compile(gxkReg);
         Pattern dollarCompile = Pattern.compile(dollarGxkReg);
         for (String idForRun : idForRuns) {
